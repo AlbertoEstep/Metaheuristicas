@@ -1,85 +1,102 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
 
 using namespace std;
 
-// Computes the contribution of the element "elem" for the solution "sol" given
-// AKA, the sum of the distances from elemet "elem" to each other element in sol
+/* Rellena la matriz de distancias
 
-double singleContribution(set<int> &contenedor, vector<vector<double>> &m, int elemento) {
-  double resultado = 0;
-  set<int>::iterator it;
-  for (it = contenedor.begin(); it != contenedor.end(); it++) {
-    resultado += m[elemento][*it];
-  }
-  return resultado;
-}
-
-// Returns the element from "non_selected" that is the farthest from "selected"
-int masLejanoEntreSeleccionados(set<int> &no_seleccionados, set<int> &seleccionados, vector<vector<double>> &m) {
-  int elem_lejano;
-  double max_sum_dist, actual_sum_dist;
-  set<int>::iterator it;
-
-  it = no_seleccionados.begin();
-  elem_lejano = *it;
-  max_sum_dist = singleContribution(seleccionados, m, elem_lejano);
-
-  for (; it!=no_seleccionados.end(); it++) {
-    actual_sum_dist = singleContribution(seleccionados, m, *it);
-    if (actual_sum_dist > max_sum_dist) {
-      max_sum_dist = actual_sum_dist;
-      elem_lejano = *it;
-    }
-  }
-  return elem_lejano;
-}
-
-// Returns the element that is the farthest from the rest of elements
-int masLejanoDeTodos(vector<vector<double>> &m) {
-  set<int> elementos;
-  for (unsigned i = 0; i < m.size(); i++) {
-    elementos.insert(i);
-  }
-  return masLejanoEntreSeleccionados(elementos, elementos, m);
-}
-
-
-void greedy(vector<vector<double>> &m, unsigned n_a_seleccionar){
-  set<int> seleccionados, no_seleccionados;
-  int elem_lejano;
-  clock_t t_total, t_inicio;
-
-  t_inicio = clock();
-  for(unsigned i = 0; i < m.size(); i++){
-    no_seleccionados.insert(i);
-  }
-  elem_lejano = masLejanoDeTodos(m);
-  no_seleccionados.erase(elem_lejano);
-  seleccionados.insert(elem_lejano);
-
-  while(seleccionados.size() < n_a_seleccionar) {
-    elem_lejano = masLejanoEntreSeleccionados(no_seleccionados, seleccionados, m);
-    no_seleccionados.erase(elem_lejano);
-    seleccionados.insert(elem_lejano);
-  }
-  t_total = clock() - t_inicio;
-  cout << "\t" << (double) t_total / CLOCKS_PER_SEC << endl;
-}
-
+Parametros:
+  - m = matriz de distancias
+*/
 
 void leerDatos(vector<vector<double>> &m){
-  unsigned i, j;
   double distancia;
-  for (i = 1; i < m.size(); i++) {
-    for (j = i + 1; j < m.size(); j++) {
+  for (unsigned i = 1; i < m.size(); i++) {
+    for (unsigned j = i + 1; j < m.size(); j++) {
       cin >> distancia >> distancia >> distancia;
       m[i][j] = m[j][i] = distancia;
     }
   }
 }
 
+
+/* Dado un conjunto de elementos y un elemento concreto, calcula la distancia
+acumulada entre el elemento y el conjunto de elementos.
+
+Parametros:
+  - elemento = elemento a calcular la distancia con los demás
+  - conjunto = conjunto de elementos a contar su distancia
+  - m = matriz de distancias
+*/
+double distanciaAUnConjunto(int elemento, set<int> &conjunto, vector<vector<double>> &m) {
+  set<int>::iterator it;
+  double suma = 0;
+
+  for(it = conjunto.begin(); it != conjunto.end(); ++it)
+    suma += m[elemento][*it];
+
+  return suma;
+}
+
+/* Dado dos conjuntos de elementos calcula el elemento entre los del primer conjunto
+(el de seleccionados) cuya distancia acumulada al otro conjunto es mayor.
+
+Parametros:
+  - seleccionados = conjunto de elementos entre los que se elige el elemento más lejano
+  - no_seleccionados = conjunto de elementos a calcular la distancia
+  - m = matriz de distancias
+*/
+
+int masLejanoEntreSeleccionados(set<int> &seleccionados, set<int> &no_seleccionados, vector<vector<double>> &m) {
+  int solucion;
+  double distancia_maxima, distancia_actual;
+  set<int>::iterator it;
+
+  it = no_seleccionados.begin();
+  solucion = *it;
+  distancia_maxima = distanciaAUnConjunto(solucion, seleccionados, m);
+
+  for(; it != no_seleccionados.end(); ++it){
+    distancia_actual = distanciaAUnConjunto(*it, seleccionados, m);
+    if(distancia_actual > distancia_maxima){
+      distancia_maxima = distancia_actual;
+      solucion = *it;
+    }
+  }
+  return solucion;
+}
+
+/* Aplica el algoritmo greedy
+
+Parametros:
+  - m = matriz de distancias
+  - n_a_seleccionar = numero de elementos a seleccionar
+*/
+void greedy(vector<vector<double>> &m, unsigned n_a_seleccionar){
+  set<int> seleccionados, no_seleccionados;
+  int elem_lejano;
+  clock_t t_total, t_inicio;
+
+  t_inicio = clock();
+  for(unsigned i = 0; i < m.size(); i++)
+    no_seleccionados.insert(i);
+
+  // Calculo el elemento de mayor distancia entre todos
+  elem_lejano = masLejanoEntreSeleccionados(no_seleccionados, no_seleccionados, m);
+  seleccionados.insert(elem_lejano);
+  no_seleccionados.erase(elem_lejano);
+
+  while(seleccionados.size() < n_a_seleccionar){
+    elem_lejano = masLejanoEntreSeleccionados(seleccionados, no_seleccionados, m);
+    seleccionados.insert(elem_lejano);
+    no_seleccionados.erase(elem_lejano);
+  }
+
+  t_total = clock() - t_inicio;
+  cout << "Tiempo consumido: " << (double) t_total / CLOCKS_PER_SEC << endl;
+}
 
 int main(){
   int n_total, n_sel; // n_total = número de elementos &&
