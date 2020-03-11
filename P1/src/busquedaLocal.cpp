@@ -23,9 +23,9 @@ void leerDatos(vector<vector<double>> &m){
   }
 }
 
-struct solucion {
+struct solucion{
   vector<int> v;
-  double evaluacion;
+  double coste;
 };
 
 /* Dado un conjunto de elementos y un elemento concreto, calcula la distancia
@@ -47,13 +47,13 @@ double distanciaAUnConjunto(int elemento, vector<int> &conjunto, vector<vector<d
 }
 
 // Returns the fitness of the whole solution
-double evaluacionSolucion(vector<int> &conjunto, vector<vector<double>> &m) {
-  double evaluacion = 0;
+double costeSolucion(vector<int> &conjunto, vector<vector<double>> &m) {
+  double coste = 0;
   vector<int>::iterator it;
   for(it = conjunto.begin(); it != conjunto.end(); ++it)
-    evaluacion += distanciaAUnConjunto(*it, conjunto, m);
+    coste += distanciaAUnConjunto(*it, conjunto, m);
   // Counting twice all the possible distances
-  return evaluacion /= 2;
+  return coste /= 2;
 }
 
 // Creates a random solution
@@ -80,8 +80,8 @@ void solucionRandom(solucion &sol, int tam, int n_a_seleccionar){
 }
 
 double actualizamosSolucion(solucion &s, vector<vector<double>> &m){
-  s.evaluacion = evaluacionSolucion(s.v, m);
-  return s.evaluacion;
+  s.coste = costeSolucion(s.v, m);
+  return s.coste;
 }
 
 
@@ -147,7 +147,7 @@ bool pasoDelAlgoritmo(solucion &sol, vector<vector<double>> &m){
         nueva_contribucion = distanciaAUnConjunto(j, sol.v, m) - m[j][elemento_fuera];
         if(nueva_contribucion > antigua_contribucion){
           sol.v[i] = j;
-          sol.evaluacion = sol.evaluacion + nueva_contribucion - antigua_contribucion;
+          sol.coste = sol.coste + nueva_contribucion - antigua_contribucion;
           return false;
         }
         k++;
@@ -178,8 +178,8 @@ double busquedaLocal(vector<vector<double>> &m, unsigned n_a_seleccionar){
   }
   t_total = clock() - t_inicio;
 
-  cout << s.evaluacion << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << iteraciones << endl;
-  return s.evaluacion;
+  cout << s.coste << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << iteraciones << endl;
+  return s.coste;
 }
 
 int main(){
