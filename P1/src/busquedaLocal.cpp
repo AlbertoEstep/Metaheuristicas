@@ -84,9 +84,6 @@ double actualizamosSolucion(solucion &s, vector<vector<double>> &m){
   return s.coste;
 }
 
-
-
-
 // Comparison operator for ordering the solution vector
 // Keeps at the front the element with less contribution to the fitness
 bool operator <(const pair<int,double> &p1, const pair<int,double> &p2){

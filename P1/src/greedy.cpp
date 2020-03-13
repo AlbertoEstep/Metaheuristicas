@@ -21,6 +21,10 @@ void leerDatos(vector<vector<double>> &m){
   }
 }
 
+struct solucion{
+  vector<int> v;
+  double coste;
+};
 
 /* Dado un conjunto de elementos y un elemento concreto, calcula la distancia
 acumulada entre el elemento y el conjunto de elementos.
@@ -40,6 +44,23 @@ double distanciaAUnConjunto(int elemento, set<int> &conjunto, vector<vector<doub
   return suma;
 }
 
+
+/* Dado un conjunto de elementos que forma la solucion, calcula la distancia entre
+los elementos del conjunto, es decir, el coste de la solución
+
+Parametros:
+  - conjunto = conjunto de elementos a contar su distancia
+  - m = matriz de distancias
+*/
+template <class T>
+double costeSolucion(T &conjunto, vector<vector<double>> &m) {
+  double coste = 0;
+  typename T::iterator it;
+  for(it = conjunto.begin(); it != conjunto.end(); ++it)
+    coste += distanciaAUnConjunto(*it, conjunto, m);
+  return coste /= 2;
+}
+
 /* Dado dos conjuntos de elementos calcula el elemento entre los del primer conjunto
 (el de seleccionados) cuya distancia acumulada al otro conjunto es mayor.
 
@@ -48,7 +69,6 @@ Parametros:
   - no_seleccionados = conjunto de elementos a calcular la distancia
   - m = matriz de distancias
 */
-
 int masLejanoEntreSeleccionados(set<int> &seleccionados, set<int> &no_seleccionados, vector<vector<double>> &m) {
   int solucion;
   double distancia_maxima, distancia_actual;
@@ -71,12 +91,13 @@ int masLejanoEntreSeleccionados(set<int> &seleccionados, set<int> &no_selecciona
 /* Aplica el algoritmo greedy
 
 Parametros:
+  - s : solucion
   - m = matriz de distancias
   - n_a_seleccionar = numero de elementos a seleccionar
 */
-void greedy(vector<vector<double>> &m, unsigned n_a_seleccionar){
+double greedy(solucion &s, vector<vector<double>> &m, unsigned n_a_seleccionar){
   set<int> seleccionados, no_seleccionados;
-  int elem_lejano;
+  int elem_lejano, i = 0;
   clock_t t_total, t_inicio;
 
   t_inicio = clock();
@@ -94,17 +115,28 @@ void greedy(vector<vector<double>> &m, unsigned n_a_seleccionar){
     no_seleccionados.erase(elem_lejano);
   }
 
+  s.coste = costeSolucion(seleccionados, m);
+  s.v.resize(seleccionados.size());
+  for(auto it : seleccionados){
+    s.v[i] = it;
+    ++i;
+  }
+
   t_total = clock() - t_inicio;
+
   cout << "Tiempo consumido: " << (double) t_total / CLOCKS_PER_SEC << endl;
+  cout << "Coste de la solucion: " << s.coste << endl;
+  return s.coste;
 }
 
 int main(){
   int n_total, n_sel; // n_total = número de elementos &&
                       // n_sel = el número de elementos a seleccionar del problema
+  solucion s;
   cin >> n_total >> n_sel; // inicializo los valores con la primera línea del fichero
   vector<double> v(n_total, 0);
   vector<vector<double>> m(n_total, v); // m = matriz de entradas
 
   leerDatos(m); // inicializo la matriz de entradas
-  greedy(m, n_sel); // aplico el algoritmo greedy
+  greedy(s, m, n_sel); // aplico el algoritmo greedy
 }
