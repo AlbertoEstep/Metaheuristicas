@@ -69,7 +69,7 @@ Parametros:
   - no_seleccionados = conjunto de elementos a calcular la distancia
   - m = matriz de distancias
 */
-int masLejanoEntreSeleccionados(set<int> &seleccionados, set<int> &no_seleccionados, vector<vector<double>> &m) {
+int masLejano(set<int> &seleccionados, set<int> &no_seleccionados, vector<vector<double>> &m) {
   int solucion;
   double distancia_maxima, distancia_actual;
   set<int>::iterator it;
@@ -105,12 +105,12 @@ double greedy(solucion &s, vector<vector<double>> &m, unsigned n_a_seleccionar){
     no_seleccionados.insert(i);
 
   // Calculo el elemento de mayor distancia entre todos
-  elem_lejano = masLejanoEntreSeleccionados(no_seleccionados, no_seleccionados, m);
+  elem_lejano = masLejano(no_seleccionados, no_seleccionados, m);
   seleccionados.insert(elem_lejano);
   no_seleccionados.erase(elem_lejano);
 
   while(seleccionados.size() < n_a_seleccionar){
-    elem_lejano = masLejanoEntreSeleccionados(seleccionados, no_seleccionados, m);
+    elem_lejano = masLejano(seleccionados, no_seleccionados, m);
     seleccionados.insert(elem_lejano);
     no_seleccionados.erase(elem_lejano);
   }
