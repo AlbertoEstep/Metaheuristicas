@@ -46,67 +46,96 @@ double distanciaAUnConjunto(int elemento, vector<int> &conjunto, vector<vector<d
   return suma;
 }
 
-// Returns the fitness of the whole solution
-double costeSolucion(vector<int> &conjunto, vector<vector<double>> &m) {
+/* Dado un conjunto de elementos que forma la solucion, calcula la distancia entre
+los elementos del conjunto, es decir, el coste de la solución
+
+Parametros:
+  - conjunto = conjunto de elementos a contar su distancia
+  - m = matriz de distancias
+*/
+template <class T>
+double costeSolucion(T &conjunto, vector<vector<double>> &m) {
   double coste = 0;
-  vector<int>::iterator it;
+  typename T::iterator it;
   for(it = conjunto.begin(); it != conjunto.end(); ++it)
     coste += distanciaAUnConjunto(*it, conjunto, m);
-  // Counting twice all the possible distances
   return coste /= 2;
 }
 
-// Creates a random solution
-// Prec.: Random seed already set
-void solucionRandom(solucion &sol, int tam, int n_a_seleccionar){
-  int seleccionados = 0, random;
-  unordered_set<int> s;
 
-  // Select 'n_a_seleccionar' elements
+/* Calcula una solucion del problema de forma aleatoria
+Para ello debemos de haber creado la semilla anteriormente
+
+Parametros:
+  - s = solucion que se rellenará
+  - n = número de elementos posibles a elegir
+  - n_a_seleccionar = número de elementos que incluirá la solucion
+*/
+void solucionAleatoria(solucion &s, int n, int n_a_seleccionar){
+  int seleccionados = 0, random;
+  unordered_set<int> conjunto;
+
+  // Seleccionamos tantos elementos como indique n_a_seleccionar
   while(seleccionados < n_a_seleccionar){
-    random = rand() % tam;
-    if(s.find(random) == s.end()){
-      s.insert(random);
+    random = rand() % n;
+    if(conjunto.find(random) == conjunto.end()){
+      conjunto.insert(random);
       seleccionados++;
     }
   }
-  // Dump the set into the solution
   int i = 0;
-  sol.v.resize(seleccionados);
-  for(auto it : s){
-    sol.v[i] = it;
+  s.v.resize(seleccionados);
+  for(auto it : conjunto){
+    s.v[i] = it;
     ++i;
   }
 }
 
+/* Actualiza el coste de la solucion
+
+Parametros:
+  - s = solucion a actualizar
+  - m = matriz de distancias
+*/
 double actualizamosSolucion(solucion &s, vector<vector<double>> &m){
   s.coste = costeSolucion(s.v, m);
   return s.coste;
 }
 
-// Comparison operator for ordering the solution vector
-// Keeps at the front the element with less contribution to the fitness
+/* sobrecargamos el operador "menor que" entre dos parejas.
+Así una pareja p1 será menor que otra p2 (p1 < p2) si y solo si la segunda
+componente (el coste) de p1 es menor al de p2.
+
+Parametros:
+  - p1 = pareja (índice-coste)
+  - p2 = pareja (índice-coste)
+*/
 bool operator <(const pair<int,double> &p1, const pair<int,double> &p2){
     return p1.second < p2.second;
 }
 
-// Order sol.v by conribution to the solution in ascending order
+/* Ordena el vector de índices de la solución de menor a mayor por la contribution
+de éstos elementos al coste
+
+Parametros:
+  - s = solucion a actualizar
+  - m = matriz de distancias
+*/
 void ordenaSolucionPorContribucion(solucion &s, vector<vector<double>> &m){
+  // Creamos un vector de parejas (indice_solución-distancia_al_resto (o coste))
   pair<int, double> p(0, 0.0);
-  vector<pair<int, double>> pairs_v(s.v.size(), p);
+  vector<pair<int, double>> parejas(s.v.size(), p);
 
-  // Initialize the auxiliar vector
-  for(unsigned i = 0; i < pairs_v.size(); ++i){
-    pairs_v[i].first = s.v[i];
-    pairs_v[i].second = distanciaAUnConjunto(pairs_v[i].first, s.v, m);
+  for(unsigned i = 0; i < parejas.size(); ++i){
+    parejas[i].first = s.v[i];
+    parejas[i].second = distanciaAUnConjunto(parejas[i].first, s.v, m);
   }
-
-  // Order the vector by contribution
-  sort(pairs_v.begin(), pairs_v.end());
-
-  // Save the ordering
-  for(unsigned i = 0; i < pairs_v.size(); ++i)
-    s.v[i] = pairs_v[i].first;
+  // Ordenamos dichas parejas por la distribución, para ello necesitamos
+  // sobrecargar el operador <
+  sort(parejas.begin(), parejas.end());
+  // Guardamos la solucion ordenada
+  for(unsigned i = 0; i < parejas.size(); ++i)
+    s.v[i] = parejas[i].first;
 }
 
 
@@ -165,7 +194,7 @@ double busquedaLocal(vector<vector<double>> &m, unsigned n_a_seleccionar){
   clock_t t_total, t_inicio;
 
   srand(time(NULL));
-  solucionRandom(s, m.size(), n_a_seleccionar);
+  solucionAleatoria(s, m.size(), n_a_seleccionar);
   actualizamosSolucion(s, m);
 
   t_inicio = clock();
