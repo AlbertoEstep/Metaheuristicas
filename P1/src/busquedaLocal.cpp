@@ -196,15 +196,9 @@ double busquedaLocal(vector<vector<double>> &m, unsigned n_a_seleccionar){
   bool parada = false;
   clock_t t_total, t_inicio;
 
-  // Fijamos la semilla
-  srand(1234567);
   // Calcula una solucion del problema de forma aleatoria
   solucionAleatoria(s, n_a_seleccionar, m);
-/*
-  for(unsigned z=0; z<s.v.size(); ++z)
-    cout << s.v[z] << " ";
-  cout << endl;
-*/
+
   t_inicio = clock();
   while (!parada)
     parada = exploracionVecindario(s, m);
@@ -215,7 +209,7 @@ double busquedaLocal(vector<vector<double>> &m, unsigned n_a_seleccionar){
   return s.coste;
 }
 
-int main(){
+int main(int argc, char *argv[]){
   int n_total, n_sel; // n_total = número de elementos &&
                       // n_sel = el número de elementos a seleccionar del problema
   cin >> n_total >> n_sel; // inicializo los valores con la primera línea del fichero
@@ -223,5 +217,10 @@ int main(){
   vector<vector<double>> m(n_total, v); // m = matriz de entradas
 
   leerDatos(m); // inicializo la matriz de entradas
+
+  int semilla = atoi(argv[1]);
+  // Fijamos la semilla
+  srand(semilla);
+
   busquedaLocal(m, n_sel); // aplico el algoritmo greedy
 }
