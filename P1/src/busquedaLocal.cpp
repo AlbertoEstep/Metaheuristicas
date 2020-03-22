@@ -68,16 +68,16 @@ Para ello debemos de haber creado la semilla anteriormente
 
 Parametros:
   - s = solucion que se rellenará
-  - n = número de elementos posibles a elegir
   - n_a_seleccionar = número de elementos que incluirá la solucion
+  - m = matriz de distancias
 */
-void solucionAleatoria(solucion &s, int n, int n_a_seleccionar, vector<vector<double>> &m){
+void solucionAleatoria(solucion &s, int n_a_seleccionar, vector<vector<double>> &m){
   int seleccionados = 0, indice_aleatorio;
   unordered_set<int> conjunto;
 
   // Seleccionamos tantos elementos como indique n_a_seleccionar
   while(seleccionados < n_a_seleccionar){
-    indice_aleatorio = rand() % n;
+    indice_aleatorio = rand() % m.size();
     if(conjunto.find(indice_aleatorio) == conjunto.end()){
       conjunto.insert(indice_aleatorio);
       seleccionados++;
@@ -197,9 +197,9 @@ double busquedaLocal(vector<vector<double>> &m, unsigned n_a_seleccionar){
   clock_t t_total, t_inicio;
 
   // Fijamos la semilla
-  srand(time(NULL));
+  srand(1234567);
   // Calcula una solucion del problema de forma aleatoria
-  solucionAleatoria(s, m.size(), n_a_seleccionar, m);
+  solucionAleatoria(s, n_a_seleccionar, m);
 /*
   for(unsigned z=0; z<s.v.size(); ++z)
     cout << s.v[z] << " ";
