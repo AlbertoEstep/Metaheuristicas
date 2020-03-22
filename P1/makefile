@@ -5,6 +5,7 @@ ENTRADA=./entrada
 # Compilamos con: -Wall (para mostrar todos los warnings) -O2 (para optimizar el código)
 OPT=-Wall -O2
 SEMILLA=1234567
+
 all: clean P1GreedyEjemplos P1busquedaLocalEjemplos
 
 # Compilación
@@ -21,11 +22,11 @@ P1GreedyEjemplos: $(BIN)/greedy $(SRC)/greedy.cpp
 	$(BIN)/greedy < $(ENTRADA)/MDG-a_31_n2000_m200.txt
 
 P1busquedaLocalEjemplos: $(BIN)/busquedaLocal $(SRC)/busquedaLocal.cpp
-	$(BIN)/busquedaLocal < $(ENTRADA)/GKD-c_11_n500_m50.txt
-	$(BIN)/busquedaLocal < $(ENTRADA)/MDG-b_1_n500_m50.txt
-	$(BIN)/busquedaLocal < $(ENTRADA)/MDG-a_31_n2000_m200.txt
+	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/GKD-c_11_n500_m50.txt
+	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/MDG-b_1_n500_m50.txt
+	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/MDG-a_31_n2000_m200.txt
 
-ResultadosGreedy: clean $(BIN)/greedy $(SRC)/greedy.cpp $(BIN)/busquedaLocal $(SRC)/busquedaLocal.cpp
+ResultadosGreedy: $(BIN)/greedy $(SRC)/greedy.cpp $(BIN)/busquedaLocal $(SRC)/busquedaLocal.cpp
 	$(BIN)/greedy < $(ENTRADA)/GKD-c_11_n500_m50.txt
 	$(BIN)/greedy < $(ENTRADA)/GKD-c_12_n500_m50.txt
 	$(BIN)/greedy < $(ENTRADA)/GKD-c_13_n500_m50.txt
@@ -57,7 +58,7 @@ ResultadosGreedy: clean $(BIN)/greedy $(SRC)/greedy.cpp $(BIN)/busquedaLocal $(S
 	$(BIN)/greedy < $(ENTRADA)/MDG-a_39_n2000_m200.txt
 	$(BIN)/greedy < $(ENTRADA)/MDG-a_40_n2000_m200.txt
 
-ResultadosBusquedaLocal: clean $(BIN)/greedy $(SRC)/greedy.cpp $(BIN)/busquedaLocal $(SRC)/busquedaLocal.cpp
+ResultadosBusquedaLocal: $(BIN)/greedy $(SRC)/greedy.cpp $(BIN)/busquedaLocal $(SRC)/busquedaLocal.cpp
 	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/GKD-c_11_n500_m50.txt
 	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/GKD-c_12_n500_m50.txt
 	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/GKD-c_13_n500_m50.txt
@@ -88,6 +89,8 @@ ResultadosBusquedaLocal: clean $(BIN)/greedy $(SRC)/greedy.cpp $(BIN)/busquedaLo
 	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/MDG-a_38_n2000_m200.txt
 	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/MDG-a_39_n2000_m200.txt
 	$(BIN)/busquedaLocal $(SEMILLA) < $(ENTRADA)/MDG-a_40_n2000_m200.txt
+
+Resultados: clean ResultadosGreedy ResultadosBusquedaLocal
 
 clean:
 	rm -f $(BIN)/*
