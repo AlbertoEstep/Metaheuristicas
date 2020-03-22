@@ -71,15 +71,15 @@ Parametros:
   - n = número de elementos posibles a elegir
   - n_a_seleccionar = número de elementos que incluirá la solucion
 */
-void solucionAleatoria(solucion &s, int n, int n_a_seleccionar){
-  int seleccionados = 0, random;
+void solucionAleatoria(solucion &s, int n, int n_a_seleccionar, vector<vector<double>> &m){
+  int seleccionados = 0, indice_aleatorio;
   unordered_set<int> conjunto;
 
   // Seleccionamos tantos elementos como indique n_a_seleccionar
   while(seleccionados < n_a_seleccionar){
-    random = rand() % n;
-    if(conjunto.find(random) == conjunto.end()){
-      conjunto.insert(random);
+    indice_aleatorio = rand() % n;
+    if(conjunto.find(indice_aleatorio) == conjunto.end()){
+      conjunto.insert(indice_aleatorio);
       seleccionados++;
     }
   }
@@ -89,17 +89,7 @@ void solucionAleatoria(solucion &s, int n, int n_a_seleccionar){
     s.v[i] = it;
     ++i;
   }
-}
-
-/* Actualiza el coste de la solucion
-
-Parametros:
-  - s = solucion a actualizar
-  - m = matriz de distancias
-*/
-double actualizamosSolucion(solucion &s, vector<vector<double>> &m){
   s.coste = costeSolucion(s.v, m);
-  return s.coste;
 }
 
 /* sobrecargamos el operador "menor que" entre dos parejas.
@@ -139,41 +129,50 @@ void ordenaSolucionPorContribucion(solucion &s, vector<vector<double>> &m){
 }
 
 
+/* Explora el vecindario intercambiando puntos para ver si mejoramos la solución
 
-// Computes a single step in the exploration, changing "sol"
-bool pasoDelAlgoritmo(solucion &sol, vector<vector<double>> &m){
-  double porcentaje_estudiado;
-  unsigned i = 0, j, elemento_fuera, intentos_totales, max_i, max_randoms, k;
-  double nueva_contribucion, antigua_contribucion;
+Parametros:
+  - s = solucion a mejorar
+  - m = matriz de distancias
+*/
+bool exploracionVecindario(solucion &s, vector<vector<double>> &m){
+  unsigned i = 0, j, k, elemento_auxiliar, limite_iteraciones, iteraciones_totales = 100000;
+  double antigua_contribucion, nueva_contribucion;
+  unordered_set<int> conjunto;
 
-  ordenaSolucionPorContribucion(sol, m);
+  // Ordenamos la solución por contribución
+  ordenaSolucionPorContribucion(s, m);
 
-  porcentaje_estudiado = 1;
-  intentos_totales = 100000;
+  // Igualamos el número de iteraciones que comprobaremos para cada índice de la
+  // solución
+  limite_iteraciones = iteraciones_totales / s.v.size();
 
-  max_i = max(porcentaje_estudiado * sol.v.size(), 1.0);
-  max_randoms = intentos_totales / max_i;
+  // Rellenamos la estructura auxiliar conjunto con los elementos de la solución
+  for(unsigned z=0; z<s.v.size(); ++z)
+    conjunto.insert(s.v[z]);
 
-  // Fill hash with our used values
-  unordered_set<int> s;
-  for(unsigned i=0; i<sol.v.size(); ++i)
-    s.insert(sol.v[i]);
-
-  // Explore the neighbourhood and return the firstly found better option
-  while(i < max_i){
-    // Save data of the element we are trying to swap
-    elemento_fuera = sol.v[i];
-    antigua_contribucion = distanciaAUnConjunto(elemento_fuera, sol.v, m);
-
+  // Para cada índice (elemento de la solución), buscamos elementos entre sus
+  // vecinos que mejoren la solución.
+  while(i < s.v.size()){
+    // Guardamos el índice anterior y buscamos uno nuevo
+    elemento_auxiliar = s.v[i];
+    antigua_contribucion = distanciaAUnConjunto(elemento_auxiliar, s.v, m);
     k = 0;
+    // Elegimos un índice aleatorio
     j = rand() % m.size();
-    while(j < m.size() && k < max_randoms){
-      // Try the swap if the element 'j' is not in the current solution
-      if(s.find(j) == s.end()){
-        nueva_contribucion = distanciaAUnConjunto(j, sol.v, m) - m[j][elemento_fuera];
+
+    // Comprobamos que no nos pasemos del límite de iteraciones.
+    while(k < limite_iteraciones){
+      // Comprobamos que el elemento no pertenezca a la solución
+      if(conjunto.find(j) == conjunto.end()){
+        // Calculamos la nueva contribución que generaría dicho elemento al
+        // hacer el intercambio con el elemento anterior.
+        nueva_contribucion = distanciaAUnConjunto(j, s.v, m) - m[j][elemento_auxiliar];
+        // Comprobamos si la nueva contribución mejora a la anterior
         if(nueva_contribucion > antigua_contribucion){
-          sol.v[i] = j;
-          sol.coste = sol.coste + nueva_contribucion - antigua_contribucion;
+          // Realizamos el intercambio y pasamos a la siguiente iteracion.
+          s.v[i] = j;
+          s.coste = s.coste + nueva_contribucion - antigua_contribucion;
           return false;
         }
         k++;
@@ -186,25 +185,33 @@ bool pasoDelAlgoritmo(solucion &sol, vector<vector<double>> &m){
 }
 
 
-// Computes the local search algorithm for a random starting solution
+/* Aplicamos el algoritmo de Búsqueda local para la obtención de la solución.
+
+Parametros:
+  - m = matriz de distancias
+  - n_a_seleccionar = número de elementos de los que constará la solución.
+*/
 double busquedaLocal(vector<vector<double>> &m, unsigned n_a_seleccionar){
   solucion s;
   bool parada = false;
-  unsigned iteraciones = 0;
   clock_t t_total, t_inicio;
 
+  // Fijamos la semilla
   srand(time(NULL));
-  solucionAleatoria(s, m.size(), n_a_seleccionar);
-  actualizamosSolucion(s, m);
-
+  // Calcula una solucion del problema de forma aleatoria
+  solucionAleatoria(s, m.size(), n_a_seleccionar, m);
+/*
+  for(unsigned z=0; z<s.v.size(); ++z)
+    cout << s.v[z] << " ";
+  cout << endl;
+*/
   t_inicio = clock();
-  while (!parada /*&& iteraciones < 10000*/) {
-    parada = pasoDelAlgoritmo(s, m);
-    iteraciones++;
-  }
+  while (!parada)
+    parada = exploracionVecindario(s, m);
   t_total = clock() - t_inicio;
 
-  cout << s.coste << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << iteraciones << endl;
+  cout << "Tiempo consumido: " << (double) t_total / CLOCKS_PER_SEC << endl;
+  cout << "Coste de la solucion: " << s.coste << endl;
   return s.coste;
 }
 
