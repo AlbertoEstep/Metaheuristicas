@@ -46,7 +46,7 @@ void solucionAleatoria(vector<vector<double>> &m, solucion &s, int n){
   // Set the flag and clear the solution
   s.evaluada = false;
   s.v = vector<bool>(m.size(), false);
-  // Select 'n' elements
+  // ganador_torneo 'n' elements
   while (n_elegidos < n){
     numero_aleatorio = random(0, m.size());
     if(!s.v[numero_aleatorio]){
@@ -63,6 +63,143 @@ void inicializarPoblacion(vector<vector<double>> &m, poblacion &p, int n_individ
   p.n_individuos = p.v.size();
 }
 
+/* Dado un conjunto de elementos y un elemento concreto, calcula la distancia
+acumulada entre el elemento y el conjunto de elementos.
+
+Parametros:
+  - elemento = elemento a calcular la distancia con los demás
+  - conjunto = conjunto de elementos a contar su distancia
+  - m = matriz de distancias
+*/
+double distanciaAUnConjunto(int elemento, vector<bool> &conjunto, vector<vector<double>> &m){
+  double suma = 0;
+  for(unsigned i = 0; i < conjunto.size(); ++i)
+    suma += v[i]*m[elemento][i];
+  return suma;
+}
+
+
+/* Dado un conjunto de elementos que forma la solucion, calcula la distancia entre
+los elementos del conjunto, es decir, el coste de la solución
+
+Parametros:
+  - conjunto = conjunto de elementos a contar su distancia
+  - m = matriz de distancias
+*/
+double costeSolucion(vector<bool> &conjunto, vector<vector<double>> &m){
+  double coste = 0;
+  for(unsigned i = 0; i < conjunto.size(); ++i)
+    if(v[i])
+      coste += distanciaAUnConjunto(i, conjunto, m);
+  return coste /= 2;
+}
+
+double evaluarSolucion(solucion &s, vector<vector<double>> &m){
+  s.coste = costeSolucion(s.v, m);
+  s.evaluada = true;
+  return s.coste;
+}
+
+void evaluarPoblacion(poblacion &p, int &iteraciones, vector<vector<double>> &m){
+  for(int i = 0; i < p.n_individuos; ++i){
+    if(!p.v[i].evaluada){
+      evaluarSolucion(p.v[i], m);
+      ++iteraciones;
+    }
+    if(p.v[i].coste > p.max_coste){
+      p.mejor_solucion = i;
+      p.max_coste = p.v[i].coste;
+    }
+  }
+}
+
+int torneoBinario(poblacion &p){
+  int r1 = random(0, p.n_individuos);
+  int r2 = random(0, p.n_individuos);
+  if(p.v[r1].coste > p.v[r2].coste)
+    return r1;
+  else
+    return r2;
+}
+
+void seleccionarIndividuos(poblacion &poblacion_actual, poblacion &poblacion_nueva){
+  int ganador_torneo;
+  poblacion_nueva.n_individuos = poblacion_actual.n_individuos;
+  poblacion_nueva.max_coste = 0;
+  poblacion_nueva.v.resize(poblacion_nueva.n_individuos);
+  for(int i = 0; i < poblacion_actual.n_individuos; ++i){
+    ganador_torneo = torneoBinario(poblacion_actual);
+    poblacion_nueva.v[i] = poblacion_actual.v[ganador_torneo];
+    if(poblacion_nueva.v[i].coste > poblacion_nueva.max_coste){
+      poblacion_nueva.mejor_solucion = i;
+      poblacion_nueva.max_coste = poblacion_actual.v[i].coste;
+    }
+  }
+}
+
+void repararSolucion(solucion &s, int n_sel) {
+  int seleccionados = 0, n_aleatorio;
+
+  for(unsigned i=0; i<s.v.size(); ++i)
+    if(s.v[i])
+      seleccionados++;
+
+  while(seleccionados > n_sel){
+    n_aleatorio = random(0, s.v.size());
+    if(s.v[n_aleatorio]){
+      s.v[n_aleatorio] = !s.v[n_aleatorio];
+      --seleccionados;
+    }
+  }
+
+  while(seleccionados < n_sel){
+    n_aleatorio = random(0, s.v.size());
+    if(!s.v[n_aleatorio]){
+      s.v[n_aleatorio] = !s.v[n_aleatorio];
+      ++seleccionados;
+    }
+  }
+}
+
+// Operador de cruce uniforme
+solucion cruceUniforme(solucion &p1, solucion &p2) {
+  solucion hijo = p1;
+  hijo.evaluada = false;
+  int n_sel = 0;
+
+  for(unsigned i = 0; i < p1.v.size(); ++i){
+    if(p1.v[i])
+      n_sel++;
+    if(p1.v[i] && p2.v[i]){
+      hijo.v[i] = true;
+    } else if(!p1.v[i] && !p2.v[i]){
+      hijo.v[i] = false;
+    } else{
+      hijo.v[i] = random(0,2) == 0;
+    }
+  }
+
+  repararSolucion(hijo, n_sel);
+  return hijo;
+}
+
+void cruce(poblacion &p, double probabilidad_cruce){
+  int n_cruces = probabilidad_cruce * p.n_individuos / 2 ;
+  int p1, p2;
+  solucion ch1, ch2;
+
+  for (int i = 0; i < n_cruces; ++i){
+    p1 = random(0, p.n_individuos);
+    do{
+      p2 = random(0, p.n_individuos);
+    } while (p1 == p2);
+    ch1 = cruceUniforme(p.v[p1], p.v[p2]);
+    ch2 = cruceUniforme(p.v[p1], p.v[p2]);
+    p.v[p1] = ch1;
+    p.v[p2] = ch2;
+  }
+}
+
 
 // Computes the local search algorithm for a random starting solucion
 // This implementation doesn't assume the pop is ordered
@@ -73,21 +210,18 @@ double AGGu(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   poblacion poblacion_nueva, poblacion_actual;
 
   t_inicio = clock();
-  inicializarPoblacion(vector<vector<double>> &m, poblacion_actual, n_individuos, n);
-
-
-
-
-
-
-  evaluatePop(poblacion_actual, evaluaciones);
+  inicializarPoblacion(m, poblacion_actual, n_individuos, n);
+  evaluarPoblacion(poblacion_actual, evaluaciones, m);
 
   while (evaluaciones < MAX_EVALUACIONES) {
     generaciones++;
-    selection(poblacion_actual, poblacion_nueva);
-    cross(poblacion_nueva, p_cruce);
+    seleccionarIndividuos(poblacion_actual, poblacion_nueva);
+    cruce(poblacion_nueva, p_cruce);
+
+
+    
     mutatePop(poblacion_nueva, p_mutacion, n, evaluaciones);
-    evaluatePop(poblacion_nueva, evaluaciones);
+    evaluarPoblacion(poblacion_nueva, evaluaciones);
     replace(poblacion_actual, poblacion_nueva);
   }
   t_total = clock() - t_inicio;
