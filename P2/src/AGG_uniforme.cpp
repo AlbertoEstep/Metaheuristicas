@@ -143,7 +143,6 @@ void repararSolucion(solucion &s, int n_sel) {
   for(unsigned i=0; i<s.v.size(); ++i)
     if(s.v[i])
       seleccionados++;
-
   while(seleccionados > n_sel){
     n_aleatorio = random(0, s.v.size());
     if(s.v[n_aleatorio]){
@@ -151,7 +150,6 @@ void repararSolucion(solucion &s, int n_sel) {
       --seleccionados;
     }
   }
-
   while(seleccionados < n_sel){
     n_aleatorio = random(0, s.v.size());
     if(!s.v[n_aleatorio]){
@@ -162,41 +160,76 @@ void repararSolucion(solucion &s, int n_sel) {
 }
 
 // Operador de cruce uniforme
-solucion cruceUniforme(solucion &p1, solucion &p2) {
-  solucion hijo = p1;
+solucion cruceUniforme(solucion &padre1, solucion &padre2) {
+  solucion hijo = padre1;
   hijo.evaluada = false;
   int n_sel = 0;
 
-  for(unsigned i = 0; i < p1.v.size(); ++i){
-    if(p1.v[i])
+  for(unsigned i = 0; i < padre1.v.size(); ++i){
+    if(padre1.v[i])
       n_sel++;
-    if(p1.v[i] && p2.v[i]){
+    if(padre1.v[i] && padre2.v[i]){
       hijo.v[i] = true;
-    } else if(!p1.v[i] && !p2.v[i]){
+    } else if(!padre1.v[i] && !padre2.v[i]){
       hijo.v[i] = false;
     } else{
-      hijo.v[i] = random(0,2) == 0;
+      hijo.v[i] = (random(0,2) == 0);
     }
   }
-
   repararSolucion(hijo, n_sel);
   return hijo;
 }
 
 void cruce(poblacion &p, double probabilidad_cruce){
   int n_cruces = probabilidad_cruce * p.n_individuos / 2 ;
-  int p1, p2;
-  solucion ch1, ch2;
+  int i1, i2;
+  solucion hijo1, hijo2;
 
   for (int i = 0; i < n_cruces; ++i){
-    p1 = random(0, p.n_individuos);
+    i1 = random(0, p.n_individuos);
     do{
-      p2 = random(0, p.n_individuos);
-    } while (p1 == p2);
-    ch1 = cruceUniforme(p.v[p1], p.v[p2]);
-    ch2 = cruceUniforme(p.v[p1], p.v[p2]);
-    p.v[p1] = ch1;
-    p.v[p2] = ch2;
+      i2 = random(0, p.n_individuos);
+    } while (i1 == i2);
+    hijo1 = cruceUniforme(p.v[i1], p.v[i2]);
+    hijo2 = cruceUniforme(p.v[i1], p.v[i2]);
+    p.v[i1] = hijo1;
+    p.v[i2] = hijo2;
+  }
+}
+
+// Mutate the solution by swapping two random elements
+void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
+  int n_aleatorio1, n_aleatorio2;
+  // Find elements to swap
+  do {
+    n_aleatorio1 = random(0, s.v.size());
+  } while(s.v[n_aleatorio1]);
+  do{
+    n_aleatorio2 = random(0, s.v.size());
+  } while(!s.v[n_aleatorio2]);
+
+  // Swap elements
+  s.v[n_aleatorio1] = true;
+  s.v[n_aleatorio2] = false;
+
+  // Update the fitness if possible
+  if(s.evaluada){
+    double antiguo_coste = distanciaAUnConjunto(n_aleatorio2, s.v, m) - m[n_aleatorio2][n_aleatorio1];
+    double nuevo_coste = distanciaAUnConjunto(n_aleatorio1, s.v, m);
+    s.coste = s.coste + nuevo_coste - antiguo_coste;
+    ++iteraciones;
+  }
+}
+
+void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<vector<double>> &m){
+  int numero_aleatorio = 0, n_mutaciones = p_mutacion * p.n_individuos;
+  for(int i = 0; i < n_mutaciones; ++i){
+    numero_aleatorio = random(0, p.n_individuos);
+    mutarSolucion(p.v[numero_aleatorio], iteraciones, m);
+  }
+  if(p.max_coste < p.v[numero_aleatorio].coste){
+    p.mejor_solucion = numero_aleatorio;
+    p.max_coste = p.v[numero_aleatorio].coste;
   }
 }
 
@@ -217,11 +250,9 @@ double AGGu(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
     generaciones++;
     seleccionarIndividuos(poblacion_actual, poblacion_nueva);
     cruce(poblacion_nueva, p_cruce);
-
-
+    mutarPoblacion(poblacion_nueva, p_mutacion, evaluaciones, m);
+    evaluarPoblacion(poblacion_nueva, evaluaciones, m);
     
-    mutatePop(poblacion_nueva, p_mutacion, n, evaluaciones);
-    evaluarPoblacion(poblacion_nueva, evaluaciones);
     replace(poblacion_actual, poblacion_nueva);
   }
   t_total = clock() - t_inicio;
