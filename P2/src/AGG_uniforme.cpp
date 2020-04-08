@@ -20,7 +20,7 @@ class poblacion{
 
     poblacion(){
       mejor_solucion = 0;
-      n = 0;
+      n_individuos = 0;
       max_coste = 0;
     }
 };
@@ -48,7 +48,7 @@ void solucionAleatoria(vector<vector<double>> &m, solucion &s, int n){
   s.v = vector<bool>(m.size(), false);
   // ganador_torneo 'n' elements
   while (n_elegidos < n){
-    numero_aleatorio = random(0, m.size());
+    numero_aleatorio = rand() % m.size();
     if(!s.v[numero_aleatorio]){
       s.v[numero_aleatorio] = true;
       n_elegidos++;
@@ -59,7 +59,7 @@ void solucionAleatoria(vector<vector<double>> &m, solucion &s, int n){
 void inicializarPoblacion(vector<vector<double>> &m, poblacion &p, int n_individuos, int n){
   p.v.resize(n_individuos);
   for(int i = 0; i < n_individuos; ++i)
-    solucionAleatoria(p.v[i], n);
+    solucionAleatoria(m, p.v[i], n_individuos);
   p.n_individuos = p.v.size();
 }
 
@@ -74,7 +74,8 @@ Parametros:
 double distanciaAUnConjunto(int elemento, vector<bool> &conjunto, vector<vector<double>> &m){
   double suma = 0;
   for(unsigned i = 0; i < conjunto.size(); ++i)
-    suma += v[i]*m[elemento][i];
+    if(conjunto[i])
+      suma += conjunto[i]*m[elemento][i];
   return suma;
 }
 
@@ -89,7 +90,7 @@ Parametros:
 double costeSolucion(vector<bool> &conjunto, vector<vector<double>> &m){
   double coste = 0;
   for(unsigned i = 0; i < conjunto.size(); ++i)
-    if(v[i])
+    if(conjunto[i])
       coste += distanciaAUnConjunto(i, conjunto, m);
   return coste /= 2;
 }
@@ -114,8 +115,8 @@ void evaluarPoblacion(poblacion &p, int &iteraciones, vector<vector<double>> &m)
 }
 
 int torneoBinario(poblacion &p){
-  int r1 = random(0, p.n_individuos);
-  int r2 = random(0, p.n_individuos);
+  int r1 = rand() % p.n_individuos, r2 = rand() % p.n_individuos;
+
   if(p.v[r1].coste > p.v[r2].coste)
     return r1;
   else
@@ -144,14 +145,14 @@ void repararSolucion(solucion &s, int n_sel) {
     if(s.v[i])
       seleccionados++;
   while(seleccionados > n_sel){
-    n_aleatorio = random(0, s.v.size());
+    n_aleatorio = rand() % s.v.size();
     if(s.v[n_aleatorio]){
       s.v[n_aleatorio] = !s.v[n_aleatorio];
       --seleccionados;
     }
   }
   while(seleccionados < n_sel){
-    n_aleatorio = random(0, s.v.size());
+    n_aleatorio = rand() % s.v.size();
     if(!s.v[n_aleatorio]){
       s.v[n_aleatorio] = !s.v[n_aleatorio];
       ++seleccionados;
@@ -163,17 +164,18 @@ void repararSolucion(solucion &s, int n_sel) {
 solucion cruceUniforme(solucion &padre1, solucion &padre2) {
   solucion hijo = padre1;
   hijo.evaluada = false;
-  int n_sel = 0;
+  int n_sel = 0, n_aleatorio;
 
   for(unsigned i = 0; i < padre1.v.size(); ++i){
     if(padre1.v[i])
-      n_sel++;
+      ++n_sel;
     if(padre1.v[i] && padre2.v[i]){
       hijo.v[i] = true;
     } else if(!padre1.v[i] && !padre2.v[i]){
       hijo.v[i] = false;
     } else{
-      hijo.v[i] = (random(0,2) == 0);
+      n_aleatorio = rand() % 2;
+      hijo.v[i] = (n_aleatorio == 0);
     }
   }
   repararSolucion(hijo, n_sel);
@@ -186,9 +188,9 @@ void cruce(poblacion &p, double probabilidad_cruce){
   solucion hijo1, hijo2;
 
   for (int i = 0; i < n_cruces; ++i){
-    i1 = random(0, p.n_individuos);
+    i1 = rand() % p.n_individuos;
     do{
-      i2 = random(0, p.n_individuos);
+      i2 = rand() % p.n_individuos;
     } while (i1 == i2);
     hijo1 = cruceUniforme(p.v[i1], p.v[i2]);
     hijo2 = cruceUniforme(p.v[i1], p.v[i2]);
@@ -202,10 +204,10 @@ void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
   int n_aleatorio1, n_aleatorio2;
   // Find elements to swap
   do {
-    n_aleatorio1 = random(0, s.v.size());
+    n_aleatorio1 = rand() % s.v.size();
   } while(s.v[n_aleatorio1]);
   do{
-    n_aleatorio2 = random(0, s.v.size());
+    n_aleatorio2 = rand() % s.v.size();;
   } while(!s.v[n_aleatorio2]);
 
   // Swap elements
@@ -224,7 +226,7 @@ void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
 void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<vector<double>> &m){
   int numero_aleatorio = 0, n_mutaciones = p_mutacion * p.n_individuos;
   for(int i = 0; i < n_mutaciones; ++i){
-    numero_aleatorio = random(0, p.n_individuos);
+    numero_aleatorio = rand() % p.n_individuos;
     mutarSolucion(p.v[numero_aleatorio], iteraciones, m);
   }
   if(p.max_coste < p.v[numero_aleatorio].coste){
@@ -233,11 +235,29 @@ void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<v
   }
 }
 
+void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva) {
+  solucion mejor_solucion;
+  bool elitismo = false;
+  int i = 0;
+
+  if(poblacion_nueva.max_coste < poblacion_actual.max_coste){
+    elitismo = true;
+    if(poblacion_nueva.mejor_solucion == 0)
+      i = 1;
+    mejor_solucion = poblacion_actual.v[poblacion_actual.mejor_solucion];
+  }
+
+  poblacion_actual.v.swap(poblacion_nueva.v);
+
+  if(elitismo)
+    poblacion_nueva.v[i] = mejor_solucion;
+}
+
 
 // Computes the local search algorithm for a random starting solucion
 // This implementation doesn't assume the pop is ordered
-double AGGu(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
-  int evaluaciones = generaciones = 0, n_individuos = 50;
+double AGGuniforme(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
+  int evaluaciones = 0, generaciones = 0, n_individuos = 50;
   double p_mutacion = 0.001, p_cruce = 0.7;
   clock_t t_total, t_inicio;
   poblacion poblacion_nueva, poblacion_actual;
@@ -252,16 +272,15 @@ double AGGu(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
     cruce(poblacion_nueva, p_cruce);
     mutarPoblacion(poblacion_nueva, p_mutacion, evaluaciones, m);
     evaluarPoblacion(poblacion_nueva, evaluaciones, m);
-    
-    replace(poblacion_actual, poblacion_nueva);
+    reemplazarPoblacion(poblacion_actual, poblacion_nueva);
   }
-  t_total = clock() - t_inicio;
 
-  solucion sol = poblacion_actual.v[ poblacion_actual.mejor_solucion ];
+  t_total = clock() - t_inicio;
+  solucion resultado = poblacion_actual.v[poblacion_actual.mejor_solucion];
 
   // output: coste - Time - Iterations
-  cout << sol.coste << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << generaciones << endl;
-  return sol.coste;
+  cout << resultado.coste << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << generaciones << "\t" << evaluaciones << endl;
+  return resultado.coste;
 }
 
 
@@ -270,7 +289,7 @@ double AGGu(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
 int main(int argc, char *argv[]){
   int n_total, n_sel; // n_total = número de elementos &&
                       // n_sel = el número de elementos a seleccionar del problema
-  const int MAX_EVALUACIONES = 50000;
+  const int MAX_EVALUACIONES = 100000;
 
   cin >> n_total >> n_sel; // inicializo los valores con la primera línea del fichero
   vector<double> v(n_total, 0);
@@ -279,7 +298,8 @@ int main(int argc, char *argv[]){
 
   int semilla = atoi(argv[1]);
   // Fijamos la semilla
-  srand(semilla);
+  //srand(semilla);
+  srand (time(NULL));
 
   AGGuniforme(m, n_sel, MAX_EVALUACIONES); // aplico el algoritmo AGGuniforme
 }
