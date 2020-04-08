@@ -59,7 +59,7 @@ void solucionAleatoria(vector<vector<double>> &m, solucion &s, int n){
 void inicializarPoblacion(vector<vector<double>> &m, poblacion &p, int n_individuos, int n){
   p.v.resize(n_individuos);
   for(int i = 0; i < n_individuos; ++i)
-    solucionAleatoria(m, p.v[i], n_individuos);
+    solucionAleatoria(m, p.v[i], n);
   p.n_individuos = p.v.size();
 }
 
@@ -133,7 +133,7 @@ void seleccionarIndividuos(poblacion &poblacion_actual, poblacion &poblacion_nue
     poblacion_nueva.v[i] = poblacion_actual.v[ganador_torneo];
     if(poblacion_nueva.v[i].coste > poblacion_nueva.max_coste){
       poblacion_nueva.mejor_solucion = i;
-      poblacion_nueva.max_coste = poblacion_actual.v[i].coste;
+      poblacion_nueva.max_coste = poblacion_nueva.v[i].coste;
     }
   }
 }
@@ -224,7 +224,7 @@ void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
 }
 
 void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<vector<double>> &m){
-  int numero_aleatorio = 0, n_mutaciones = p_mutacion * p.n_individuos;
+  int numero_aleatorio = 0, n_mutaciones = p_mutacion * p.n_individuos * m.size();
   for(int i = 0; i < n_mutaciones; ++i){
     numero_aleatorio = rand() % p.n_individuos;
     mutarSolucion(p.v[numero_aleatorio], iteraciones, m);
@@ -235,22 +235,21 @@ void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<v
   }
 }
 
-void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva) {
+
+void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva){
   solucion mejor_solucion;
-  bool elitismo = false;
-  int i = 0;
+  int i;
 
   if(poblacion_nueva.max_coste < poblacion_actual.max_coste){
-    elitismo = true;
-    if(poblacion_nueva.mejor_solucion == 0)
-      i = 1;
-    mejor_solucion = poblacion_actual.v[poblacion_actual.mejor_solucion];
+    i = poblacion_actual.mejor_solucion;
+    mejor_solucion = poblacion_actual.v[i];
+    poblacion_actual.v.swap(poblacion_nueva.v);
+    poblacion_actual.v[i] = mejor_solucion;
+  } else{
+    poblacion_actual.v.swap(poblacion_nueva.v);
+    poblacion_actual.max_coste = poblacion_nueva.max_coste;
+    poblacion_actual.mejor_solucion = poblacion_nueva.mejor_solucion;
   }
-
-  poblacion_actual.v.swap(poblacion_nueva.v);
-
-  if(elitismo)
-    poblacion_nueva.v[i] = mejor_solucion;
 }
 
 
@@ -289,7 +288,7 @@ double AGGuniforme(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
 int main(int argc, char *argv[]){
   int n_total, n_sel; // n_total = número de elementos &&
                       // n_sel = el número de elementos a seleccionar del problema
-  const int MAX_EVALUACIONES = 100000;
+  const int MAX_EVALUACIONES = 50000;
 
   cin >> n_total >> n_sel; // inicializo los valores con la primera línea del fichero
   vector<double> v(n_total, 0);
@@ -298,8 +297,7 @@ int main(int argc, char *argv[]){
 
   int semilla = atoi(argv[1]);
   // Fijamos la semilla
-  //srand(semilla);
-  srand (time(NULL));
+  srand(semilla);
 
   AGGuniforme(m, n_sel, MAX_EVALUACIONES); // aplico el algoritmo AGGuniforme
 }
