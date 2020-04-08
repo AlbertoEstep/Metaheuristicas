@@ -2,6 +2,7 @@
 #include <vector>
 #include <set>
 #include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
+#include <algorithm>
 
 using namespace std;
 
@@ -161,25 +162,36 @@ void repararSolucion(solucion &s, int n_sel) {
 }
 
 // Operador de cruce uniforme
-solucion cruceUniforme(solucion &padre1, solucion &padre2) {
-  solucion hijo = padre1;
-  hijo.evaluada = false;
-  int n_sel = 0, n_aleatorio;
+void crucePosicion(solucion &padre1, solucion &padre2, solucion &hijo1, solucion &hijo2){
+  hijo1 = padre1;
+  hijo2 = padre2;
+  hijo1.evaluada = false;
+  hijo2.evaluada = false;
+
+  vector<bool> shuffled (padre1.v.size(), false);
+  vector<bool> to_shuffle, to_shuffle2;
 
   for(unsigned i = 0; i < padre1.v.size(); ++i){
-    if(padre1.v[i])
-      ++n_sel;
-    if(padre1.v[i] && padre2.v[i]){
-      hijo.v[i] = true;
-    } else if(!padre1.v[i] && !padre2.v[i]){
-      hijo.v[i] = false;
+    if(padre1.v[i] == padre2.v[i]){
+      hijo1.v[i] = padre1.v[i];
+      hijo2.v[i] = padre1.v[i];
     } else{
-      n_aleatorio = rand() % 2;
-      hijo.v[i] = (n_aleatorio == 0);
+      shuffled[i] = true;
+      to_shuffle.push_back(padre1.v[i]);
     }
   }
-  repararSolucion(hijo, n_sel);
-  return hijo;
+  random_shuffle(to_shuffle.begin(), to_shuffle.end());
+  to_shuffle2 = to_shuffle;
+  random_shuffle(to_shuffle2.begin(), to_shuffle2.end());
+
+  int j = 0;
+  for(unsigned i = 0; i < padre1.v.size(); ++i){
+    if(shuffled[i]){
+      hijo1.v[i] = to_shuffle[j];
+      hijo2.v[i] = to_shuffle2[j];
+      ++j;
+    }
+  }
 }
 
 void cruce(poblacion &p, double probabilidad_cruce){
@@ -192,12 +204,12 @@ void cruce(poblacion &p, double probabilidad_cruce){
     do{
       i2 = rand() % p.n_individuos;
     } while (i1 == i2);
-    hijo1 = cruceUniforme(p.v[i1], p.v[i2]);
-    hijo2 = cruceUniforme(p.v[i1], p.v[i2]);
+    crucePosicion(p.v[i1], p.v[i2], hijo1, hijo2);
     p.v[i1] = hijo1;
     p.v[i2] = hijo2;
   }
 }
+
 
 // Mutate the solution by swapping two random elements
 void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
@@ -261,9 +273,10 @@ void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva
 }
 
 
+
 // Computes the local search algorithm for a random starting solucion
 // This implementation doesn't assume the pop is ordered
-double AGGuniforme(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
+double AGGposicion(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   int evaluaciones = 0, generaciones = 0, n_individuos = 50;
   double p_mutacion = 0.001, p_cruce = 0.7;
   clock_t t_total, t_inicio;
@@ -307,6 +320,5 @@ int main(int argc, char *argv[]){
   // Fijamos la semilla
   srand(semilla);
 
-  AGGuniforme(m, n_sel, MAX_EVALUACIONES); // aplico el algoritmo AGGuniforme
-  cout << "FALTA REPARACION!!!!!" << endl;
+  AGGposicion(m, n_sel, MAX_EVALUACIONES); // aplico el algoritmo AGGuniforme
 }

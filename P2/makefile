@@ -6,7 +6,7 @@ ENTRADA=./entrada
 OPT=-Wall -O2
 SEMILLA=1234567
 
-all: clean P2AGGuniformeEjemplos
+all: clean P2AGGuniformeEjemplos P2AGGposicionEjemplos
 
 # Compilación
 $(BIN)/AGG_uniforme:
@@ -17,6 +17,16 @@ P2AGGuniformeEjemplos: $(BIN)/AGG_uniforme $(SRC)/AGG_uniforme.cpp
 	$(BIN)/AGG_uniforme $(SEMILLA) < $(ENTRADA)/GKD-c_11_n500_m50.txt
 	$(BIN)/AGG_uniforme $(SEMILLA) < $(ENTRADA)/MDG-b_1_n500_m50.txt
 	$(BIN)/AGG_uniforme $(SEMILLA) < $(ENTRADA)/MDG-a_31_n2000_m200.txt
+
+# Compilación
+$(BIN)/AGG_posicion:
+	g++ $(OPT) $(SRC)/AGG_posicion.cpp -o $(BIN)/AGG_posicion
+
+# Ejemplo
+P2AGGposicionEjemplos: $(BIN)/AGG_posicion $(SRC)/AGG_posicion.cpp
+	$(BIN)/AGG_posicion $(SEMILLA) < $(ENTRADA)/GKD-c_11_n500_m50.txt
+	$(BIN)/AGG_posicion $(SEMILLA) < $(ENTRADA)/MDG-b_1_n500_m50.txt
+	$(BIN)/AGG_posicion $(SEMILLA) < $(ENTRADA)/MDG-a_31_n2000_m200.txt
 
 
 clean:
