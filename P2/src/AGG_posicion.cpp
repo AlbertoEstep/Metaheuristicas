@@ -107,10 +107,10 @@ void evaluarPoblacion(poblacion &p, int &iteraciones, vector<vector<double>> &m)
     if(!p.v[i].evaluada){
       evaluarSolucion(p.v[i], m);
       ++iteraciones;
-    }
-    if(p.v[i].coste > p.max_coste){
-      p.mejor_solucion = i;
-      p.max_coste = p.v[i].coste;
+      if(p.v[i].coste > p.max_coste){
+        p.mejor_solucion = i;
+        p.max_coste = p.v[i].coste;
+      }
     }
   }
 }

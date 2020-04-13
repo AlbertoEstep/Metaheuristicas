@@ -2,6 +2,7 @@
 #include <vector>
 #include <set>
 #include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
+#include <algorithm>
 
 using namespace std;
 
@@ -149,6 +150,14 @@ void evaluarPoblacion(poblacion &p, int &evaluaciones, vector<vector<double>> &m
   }
 }
 
+/* Sobrecargamos el operador < entre soluciones para poder ordenar la poblacion.
+Solucion1 < Solucion2 <=> Diversidad de Solucion1 > Diversidad de Solucion2
+*/
+bool operator < (const solucion &s1, const solucion &s2) {
+    return s1.coste > s2.coste;
+}
+
+
 /* Torneo entre dos individuos de la poblacion
 
 Parametros:
@@ -166,22 +175,20 @@ int torneoBinario(poblacion &p){
 /* Metodo de seleccion de individuos de la poblacion
 
 Parametros:
-  - poblacion_actual = poblacion donde elegiremos los individuos
-  - poblacion_nueva = poblacion resultante
+  - p = poblacion donde elegiremos los individuos
+  - padre1 = primera solucion seleccionada
+  - padre2 = segunda solucion seleccionada
 */
-void seleccionarIndividuos(poblacion &poblacion_actual, poblacion &poblacion_nueva){
-  int ganador_torneo;
-  poblacion_nueva.n_individuos = poblacion_actual.n_individuos;
-  poblacion_nueva.max_coste = 0;
-  poblacion_nueva.v.resize(poblacion_nueva.n_individuos);
-  for(int i = 0; i < poblacion_actual.n_individuos; ++i){
-    ganador_torneo = torneoBinario(poblacion_actual);
-    poblacion_nueva.v[i] = poblacion_actual.v[ganador_torneo];
-    if(poblacion_nueva.v[i].coste > poblacion_nueva.max_coste){
-      poblacion_nueva.mejor_solucion = i;
-      poblacion_nueva.max_coste = poblacion_nueva.v[i].coste;
-    }
-  }
+void seleccionarIndividuos(poblacion &p, solucion &padre1, solucion &padre2){
+  int hijo1, hijo2;
+
+  hijo1 = torneoBinario(p);
+  do{
+    hijo2 = torneoBinario(p);
+  } while (hijo2 == hijo1);
+
+  padre1 = p.v[hijo1];
+  padre2 = p.v[hijo2];
 }
 
 /* Metodo de reparacion de la solucion
@@ -242,24 +249,14 @@ solucion cruceUniforme(solucion &padre1, solucion &padre2) {
 /* Metodo de cruce entre la poblacion
 
 Parametros:
-  - p = poblacion a cruzar
-  - probabilidad_cruce = probabilidad de dos individuos de cruzarse
+  - padre1 = primer padre a cruzar
+  - padre2 = segundo padre a cruzar
+  - hijo1 = solucion obtenida al cruzar padre1 y padre2 la primera vez
+  - hijo2 = solucion obtenida al cruzar padre1 y padre2 la segunda vez
 */
-void cruce(poblacion &p, double probabilidad_cruce){
-  int n_cruces = probabilidad_cruce * p.n_individuos / 2 ;
-  int i1, i2;
-  solucion hijo1, hijo2;
-
-  for (int i = 0; i < n_cruces; ++i){
-    i1 = rand() % p.n_individuos;
-    do{
-      i2 = rand() % p.n_individuos;
-    } while (i1 == i2);
-    hijo1 = cruceUniforme(p.v[i1], p.v[i2]);
-    hijo2 = cruceUniforme(p.v[i1], p.v[i2]);
-    p.v[i1] = hijo1;
-    p.v[i2] = hijo2;
-  }
+void cruce(solucion &padre1, solucion &padre2, solucion &hijo1, solucion &hijo2){
+  hijo1 = cruceUniforme(padre1, padre2);
+  hijo2 = cruceUniforme(padre1, padre2);
 }
 
 /* Metodo de mutacion entre la solucion
@@ -298,49 +295,30 @@ Parametros:
   - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
   - m = matriz de distancias
 */
-void mutarPoblacion(poblacion &p, double &p_mutacion, int &evaluaciones, vector<vector<double>> &m){
-  int numero_aleatorio = 0, n_mutaciones = p_mutacion * p.n_individuos * m.size();
+void mutarPoblacion(solucion &hijo1, solucion &hijo2, double &p_mutacion, int &evaluaciones, vector<vector<double>> &m){
+  int n_mutaciones = p_mutacion * m.size();
+  if(n_mutaciones == 0) // Si n_mutaciones = 0, le damos la probabilidad del 50% a un gen a mutar
+    n_mutaciones = rand() % 2;
   for(int i = 0; i < n_mutaciones; ++i){
-    numero_aleatorio = rand() % p.n_individuos;
-    mutarSolucion(p.v[numero_aleatorio], evaluaciones, m);
-  }
-  if(p.max_coste < p.v[numero_aleatorio].coste){
-    p.mejor_solucion = numero_aleatorio;
-    p.max_coste = p.v[numero_aleatorio].coste;
+    mutarSolucion(hijo1, evaluaciones, m);
+    mutarSolucion(hijo2, evaluaciones, m);
   }
 }
 
 /* Metodo de reemplazamiento de individuos de la poblacion
 
 Parametros:
-  - poblacion_actual = poblacion a actualizar
-  - poblacion_nueva = poblacion de hijos que pasara a ser poblacion_actual
+  - p = poblacion a actualizar
+  - hijo1 = nuevo individuo a introducir
+  - hijo2 = nuevo individuo a introducir
 */
-void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva){
-  solucion mejor_solucion;
-  int indice_peor_solucion = poblacion_nueva.mejor_solucion;
-  int coste_minimo = poblacion_nueva.max_coste;
-  int i;
-
-  if(poblacion_nueva.max_coste < poblacion_actual.max_coste){
-    for(int j = 0; j < poblacion_nueva.n_individuos; ++j){
-      if(poblacion_nueva.v[j].coste < coste_minimo){
-        indice_peor_solucion = j;
-        coste_minimo = poblacion_nueva.v[j].coste;
-      }
-    }
-    i = poblacion_actual.mejor_solucion;
-    mejor_solucion = poblacion_actual.v[i];
-    poblacion_actual.v.swap(poblacion_nueva.v);
-    poblacion_actual.v[indice_peor_solucion] = mejor_solucion;
-  } else{
-    poblacion_actual.v.swap(poblacion_nueva.v);
-    poblacion_actual.max_coste = poblacion_nueva.max_coste;
-    poblacion_actual.mejor_solucion = poblacion_nueva.mejor_solucion;
-  }
+void reemplazarPoblacion(poblacion &p, solucion &hijo1, solucion &hijo2){
+  p.v.push_back(hijo1);
+  p.v.push_back(hijo2);
+  sort(p.v.begin(), p.v.end());
+  p.v.resize(p.v.size() - 2);
+  p.max_coste = p.v[0].coste;
 }
-
-
 
 /* Metodo de general del algoritmo
 
@@ -351,25 +329,30 @@ Parametros:
 */
 double AGGuniforme(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   int evaluaciones = 0, generaciones = 0, n_individuos = 50;
-  double p_mutacion = 0.001, p_cruce = 0.7;
+  double p_mutacion = 0.001;
   clock_t t_total, t_inicio;
-  poblacion poblacion_nueva, poblacion_actual;
+  poblacion poblacion;
+  solucion padre1, padre2, hijo1, hijo2;
 
   t_inicio = clock();
-  inicializarPoblacion(m, poblacion_actual, n_individuos, n);
-  evaluarPoblacion(poblacion_actual, evaluaciones, m);
+  inicializarPoblacion(m, poblacion, n_individuos, n);
+  evaluarPoblacion(poblacion, evaluaciones, m);
+  sort(poblacion.v.begin(), poblacion.v.end());
+  poblacion.mejor_solucion = 0;
 
-  while (evaluaciones < MAX_EVALUACIONES) {
+  while(evaluaciones < MAX_EVALUACIONES){
     generaciones++;
-    seleccionarIndividuos(poblacion_actual, poblacion_nueva);
-    cruce(poblacion_nueva, p_cruce);
-    mutarPoblacion(poblacion_nueva, p_mutacion, evaluaciones, m);
-    evaluarPoblacion(poblacion_nueva, evaluaciones, m);
-    reemplazarPoblacion(poblacion_actual, poblacion_nueva);
+    seleccionarIndividuos(poblacion, padre1, padre2);
+    cruce(padre1, padre2, hijo1, hijo2);
+    mutarPoblacion(hijo1, hijo2, p_mutacion, evaluaciones, m);
+    evaluarSolucion(hijo1, m);
+    evaluarSolucion(hijo2, m);
+    evaluaciones += 2;
+    reemplazarPoblacion(poblacion, hijo1, hijo2);
   }
 
   t_total = clock() - t_inicio;
-  solucion resultado = poblacion_actual.v[poblacion_actual.mejor_solucion];
+  solucion resultado = poblacion.v[poblacion.mejor_solucion];
 
   cout << resultado.coste << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << generaciones << "\t" << evaluaciones << endl;
   return resultado.coste;
@@ -393,5 +376,4 @@ int main(int argc, char *argv[]){
   srand(semilla);
 
   AGGuniforme(m, n_sel, MAX_EVALUACIONES); // aplico el algoritmo AGGuniforme
-  cout << "FALTA REPARACION!!!!!" << endl;
 }
