@@ -6,18 +6,21 @@
 
 using namespace std;
 
+// Estructura para representar una solucion
 struct solucion{
-  vector<bool> v;
-  double coste;
-  bool evaluada;
+  vector<bool> v;   // Vector de 1's y 0's donde 1 en la posicion i significa
+                    // que pertenece el elemento i a la solucion.
+  double coste;     // Diversidad de la solucion
+  bool evaluada;    // Flag que comprueba si esta o no evaluada la solucion
 };
 
+// Estructura para representar una poblacion
 class poblacion{
   public:
-    vector<solucion> v;
-    double max_coste;
-    int mejor_solucion;
-    int n_individuos;
+    vector<solucion> v;   // Vector de soluciones
+    double max_coste;     // Diversidad de la solucion con mayor diversidad
+    int mejor_solucion;   // Indice en el vector con la mejor solucion
+    int n_individuos;     // Numero de individuos de la solucion
 
     poblacion(){
       mejor_solucion = 0;
@@ -42,6 +45,13 @@ void leerDatos(vector<vector<double>> &m){
   }
 }
 
+/* Rellena una solucion con valores aletorios
+
+Parametros:
+  - m = matriz de distancias
+  - s = solucion a rellenar
+  - n = numero de elementos a seleccionar para la solucion
+*/
 void solucionAleatoria(vector<vector<double>> &m, solucion &s, int n){
   int n_elegidos = 0, numero_aleatorio;
   // Set the flag and clear the solution
@@ -57,6 +67,14 @@ void solucionAleatoria(vector<vector<double>> &m, solucion &s, int n){
   }
 }
 
+/* Iniciamos la poblacion con soluciones aleatorias
+
+Parametros:
+  - m = matriz de distancias
+  - p = poblacion a inicializar
+  - n_individuos = numero de elementos que perteneceran a la poblacion
+  - n = numero de elementos a seleccionar para la solucion
+*/
 void inicializarPoblacion(vector<vector<double>> &m, poblacion &p, int n_individuos, int n){
   p.v.resize(n_individuos);
   for(int i = 0; i < n_individuos; ++i)
@@ -96,12 +114,28 @@ double costeSolucion(vector<bool> &conjunto, vector<vector<double>> &m){
   return coste /= 2;
 }
 
+/* Dado un conjunto de elementos que forma la solucion, calcula la distancia entre
+los elementos del conjunto, es decir, el coste de la solución y pone el Flag
+evaluada a true,
+
+Parametros:
+  - s = solucion a calcular su diversidad
+  - m = matriz de distancias
+*/
 double evaluarSolucion(solucion &s, vector<vector<double>> &m){
   s.coste = costeSolucion(s.v, m);
   s.evaluada = true;
   return s.coste;
 }
 
+/* Dado una poblacion, calculamos la diversidad de cada individuo y actualiza
+los valores de control de la poblacion
+
+Parametros:
+  - p = piblacion a calcular su diversidad
+  - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
+  - m = matriz de distancias
+*/
 void evaluarPoblacion(poblacion &p, int &iteraciones, vector<vector<double>> &m){
   for(int i = 0; i < p.n_individuos; ++i){
     if(!p.v[i].evaluada){
@@ -115,6 +149,11 @@ void evaluarPoblacion(poblacion &p, int &iteraciones, vector<vector<double>> &m)
   }
 }
 
+/* Torneo entre dos individuos de la poblacion
+
+Parametros:
+  - p = poblacion
+*/
 int torneoBinario(poblacion &p){
   int r1 = rand() % p.n_individuos, r2 = rand() % p.n_individuos;
 
@@ -124,6 +163,12 @@ int torneoBinario(poblacion &p){
     return r2;
 }
 
+/* Metodo de seleccion de individuos de la poblacion
+
+Parametros:
+  - poblacion_actual = poblacion donde elegiremos los individuos
+  - poblacion_nueva = poblacion resultante
+*/
 void seleccionarIndividuos(poblacion &poblacion_actual, poblacion &poblacion_nueva){
   int ganador_torneo;
   poblacion_nueva.n_individuos = poblacion_actual.n_individuos;
@@ -139,29 +184,14 @@ void seleccionarIndividuos(poblacion &poblacion_actual, poblacion &poblacion_nue
   }
 }
 
-void repararSolucion(solucion &s, int n_sel) {
-  int seleccionados = 0, n_aleatorio;
+/* Metodo de cruce entre soluciones
 
-  for(unsigned i=0; i<s.v.size(); ++i)
-    if(s.v[i])
-      seleccionados++;
-  while(seleccionados > n_sel){
-    n_aleatorio = rand() % s.v.size();
-    if(s.v[n_aleatorio]){
-      s.v[n_aleatorio] = !s.v[n_aleatorio];
-      --seleccionados;
-    }
-  }
-  while(seleccionados < n_sel){
-    n_aleatorio = rand() % s.v.size();
-    if(!s.v[n_aleatorio]){
-      s.v[n_aleatorio] = !s.v[n_aleatorio];
-      ++seleccionados;
-    }
-  }
-}
-
-// Operador de cruce uniforme
+Parametros:
+  - padre1 = una solucion a cruzar
+  - padre2 = la otra solucion a cruzar
+  - hijo1 = una solucion ya cruzada
+  - hijo2 = la otra solucion ya cruzada
+*/
 void crucePosicion(solucion &padre1, solucion &padre2, solucion &hijo1, solucion &hijo2){
   hijo1 = padre1;
   hijo2 = padre2;
@@ -194,6 +224,12 @@ void crucePosicion(solucion &padre1, solucion &padre2, solucion &hijo1, solucion
   }
 }
 
+/* Metodo de cruce entre la poblacion
+
+Parametros:
+  - p = poblacion a cruzar
+  - probabilidad_cruce = probabilidad de dos individuos de cruzarse
+*/
 void cruce(poblacion &p, double probabilidad_cruce){
   int n_cruces = probabilidad_cruce * p.n_individuos / 2 ;
   int i1, i2;
@@ -210,11 +246,16 @@ void cruce(poblacion &p, double probabilidad_cruce){
   }
 }
 
+/* Metodo de mutacion entre la solucion
 
-// Mutate the solution by swapping two random elements
+Parametros:
+  - s = solucion a mutar
+  - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
+  - m = matriz de distancias
+*/
 void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
   int n_aleatorio1, n_aleatorio2;
-  // Find elements to swap
+
   do {
     n_aleatorio1 = rand() % s.v.size();
   } while(s.v[n_aleatorio1]);
@@ -222,11 +263,9 @@ void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
     n_aleatorio2 = rand() % s.v.size();;
   } while(!s.v[n_aleatorio2]);
 
-  // Swap elements
   s.v[n_aleatorio1] = true;
   s.v[n_aleatorio2] = false;
 
-  // Update the fitness if possible
   if(s.evaluada){
     double antiguo_coste = distanciaAUnConjunto(n_aleatorio2, s.v, m) - m[n_aleatorio2][n_aleatorio1];
     double nuevo_coste = distanciaAUnConjunto(n_aleatorio1, s.v, m);
@@ -235,6 +274,14 @@ void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
   }
 }
 
+/* Metodo de mutacion de la poblacion
+
+Parametros:
+  - p = poblacion a mutar
+  - p_mutacion = probabilidad de un gen de mutar.
+  - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
+  - m = matriz de distancias
+*/
 void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<vector<double>> &m){
   int numero_aleatorio = 0, n_mutaciones = p_mutacion * p.n_individuos * m.size();
   for(int i = 0; i < n_mutaciones; ++i){
@@ -247,7 +294,12 @@ void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<v
   }
 }
 
+/* Metodo de reemplazamiento de individuos de la poblacion
 
+Parametros:
+  - poblacion_actual = poblacion a actualizar
+  - poblacion_nueva = poblacion de hijos que pasara a ser poblacion_actual
+*/
 void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva){
   solucion mejor_solucion;
   int indice_peor_solucion = poblacion_nueva.mejor_solucion;
@@ -272,10 +324,13 @@ void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva
   }
 }
 
+/* Metodo de general del algoritmo
 
-
-// Computes the local search algorithm for a random starting solucion
-// This implementation doesn't assume the pop is ordered
+Parametros:
+  - m = matriz de distancias
+  - n = numero de elementos a seleccionar
+  - MAX_EVALUACIONES = numero de evaluaciones maximo permitido
+*/
 double AGGposicion(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   int evaluaciones = 0, generaciones = 0, n_individuos = 50;
   double p_mutacion = 0.001, p_cruce = 0.7;
@@ -298,7 +353,6 @@ double AGGposicion(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   t_total = clock() - t_inicio;
   solucion resultado = poblacion_actual.v[poblacion_actual.mejor_solucion];
 
-  // output: coste - Time - Iterations
   cout << resultado.coste << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << generaciones << "\t" << evaluaciones << endl;
   return resultado.coste;
 }
