@@ -53,10 +53,8 @@ Parametros:
 */
 void solucionAleatoria(vector<vector<double>> &m, solucion &s, int n){
   int n_elegidos = 0, numero_aleatorio;
-  // Set the flag and clear the solution
   s.evaluada = false;
   s.v = vector<bool>(m.size(), false);
-  // ganador_torneo 'n' elements
   while (n_elegidos < n){
     numero_aleatorio = rand() % m.size();
     if(!s.v[numero_aleatorio]){

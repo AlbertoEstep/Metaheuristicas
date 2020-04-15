@@ -1,10 +1,167 @@
 #include <iostream>
 #include <vector>
 #include <set>
-#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
-#include <algorithm>
+#include <unordered_set>
+#include <stdlib.h>     // srand y rand
+#include <algorithm>    // sort y random_shuffle
+#include <time.h>
 
 using namespace std;
+
+////////////////// LOCAL SEARCH ///////////////////////
+
+template <class T>
+double singleContribution(T &container, int elem) {
+  double result = 0;
+  typename T::iterator it;
+  for (it = container.begin(); it != container.end(); it++) {
+    result += MAT[ elem ][ *it ];
+  }
+  return result;
+}
+
+// Returns the fitness of the whole solution
+template <class T>
+double evaluateSolution(T &container) {
+  double fitness = 0;
+  typename T::iterator it;
+  for (it = container.begin(); it != container.end(); it++) {
+    fitness += singleContribution(container, *it);
+  }
+  // Counting twice all the possible distances
+  return fitness /= 2;
+}
+
+// Comparison operator for ordering the solution vector
+// Keeps at the front the element with less contribution to the fitness
+bool operator < (const pair<int,double> &p1, const pair<int,double> &p2) {
+    return p1.second < p2.second;
+}
+
+struct solution_int {
+  vector<int> v;
+  double fitness;
+};
+
+double updateSolution(solution_int &sol) {
+  sol.fitness = evaluateSolution(sol.v);
+  return sol.fitness;
+}
+
+// Order sol.v by conribution to the solution in ascending order
+void orderSolutionByContribution(solution_int &sol) {
+  pair<int, double> p (0, 0.0);
+  vector< pair<int, double> > pairs_v ( sol.v.size(), p);
+
+  // Initialize the auxiliar vector
+  for (unsigned i=0; i< pairs_v.size(); i++) {
+    pairs_v[i].first = sol.v[i];
+    pairs_v[i].second = singleContribution(sol.v, pairs_v[i].first);
+  }
+
+  // Order the vector by contribution
+  sort(pairs_v.begin(), pairs_v.end());
+
+  // Save the ordering
+  for (unsigned i=0; i< pairs_v.size(); i++) {
+    sol.v[i] = pairs_v[i].first;
+  }
+}
+
+// Computes a single step in the exploration, changing "sol"
+bool stepInNeighbourhood (solution_int &sol, int &evaluations, int MAX) {
+  double percentage_studied;
+  unsigned i = 0, j, element_out, total_tries, max_i, max_randoms, k;
+  double newContribution, oldContribution;
+  int real_evaluations = 0;
+
+  orderSolutionByContribution(sol);
+
+  // percentage_studied = 0.1;
+  // total_tries = 50000;
+
+  percentage_studied = 0.1;
+  total_tries = MAX;
+
+  max_i = max(percentage_studied * sol.v.size(), 1.0);
+  max_randoms = total_tries / max_i;
+
+  // Fill hash with our used values
+  unordered_set<int> s;
+  for (unsigned i=0; i<sol.v.size(); i++) {
+    s.insert( sol.v[i] );
+  }
+
+  // Explore the neighbourhood and return the firstly found better option
+  while (i < max_i) {
+    // Save data of the element we are trying to swap
+    element_out = sol.v[i];
+    oldContribution = singleContribution(sol.v, element_out);
+
+    k = 0;
+    j = rand() % MAT.size();
+    while (j < MAT.size() && k < max_randoms) {
+      // Try the swap if the element 'j' is not in the current solution
+      if ( s.find(j) == s.end() ) {
+        newContribution = singleContribution(sol.v, j) - MAT[j][element_out];
+        if ( newContribution > oldContribution ) {
+          sol.v[i] = j;
+          sol.fitness = sol.fitness + newContribution - oldContribution;
+          return false;
+        }
+        k++;
+
+        real_evaluations++;
+        if (real_evaluations % sol.v.size() == 0) {
+          evaluations++;
+          real_evaluations = 0;
+        }
+      }
+      j = rand() % MAT.size();
+    }
+    i++;
+  }
+  return true;
+}
+
+void BitsToInt(solution &sol_bits, solution_int &sol) {
+  sol.v.clear();
+  for(unsigned i=0; i<sol_bits.v.size(); i++) {
+    if ( sol_bits.v[i] ) {
+      sol.v.push_back(i);
+    }
+  }
+}
+
+void IntToBits(solution_int &sol, solution &sol_bits, int tam) {
+  sol_bits.v = vector<bool> (tam, false);
+  for(unsigned i=0; i<sol.v.size(); i++) {
+    sol_bits.v[ sol.v[i] ] = true;
+  }
+}
+
+// Computes the local search algorithm for a random starting solution
+int localSearch(solution &sol_bits, int MAX_EVALUATIONS) {
+  int tam_sol_bits = sol_bits.v.size();
+  solution_int sol;
+  bool stop = false;
+  int evaluations = 0;
+
+  BitsToInt(sol_bits, sol);
+  updateSolution(sol);
+
+  while (!stop && evaluations < MAX_EVALUATIONS) {
+    stop = stepInNeighbourhood(sol, evaluations, MAX_EVALUATIONS-evaluations);
+    // cout << sol.fitness << "\t" << iterations << endl;
+  }
+
+  // output: Fitness - Time - Iterations
+  // cout << sol.fitness << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << iterations<< endl;
+  IntToBits(sol, sol_bits, tam_sol_bits);
+  return evaluations;
+}
+
+///////////////////////////// GENETIC ///////////////////////////////////////
 
 // Estructura para representar una solucion
 struct solucion{
@@ -112,6 +269,7 @@ double costeSolucion(vector<bool> &conjunto, vector<vector<double>> &m){
   return coste /= 2;
 }
 
+
 /* Dado un conjunto de elementos que forma la solucion, calcula la distancia entre
 los elementos del conjunto, es decir, el coste de la solución y pone el Flag
 evaluada a true,
@@ -125,6 +283,8 @@ double evaluarSolucion(solucion &s, vector<vector<double>> &m){
   s.evaluada = true;
   return s.coste;
 }
+
+
 
 /* Dado una poblacion, calculamos la diversidad de cada individuo y actualiza
 los valores de control de la poblacion
@@ -182,44 +342,59 @@ void seleccionarIndividuos(poblacion &poblacion_actual, poblacion &poblacion_nue
   }
 }
 
+/* Metodo de reparacion de la solucion
+
+Parametros:
+  - s = solucion a reparar
+  - n_sel = numero de elementos que formaran la solucion
+*/
+void repararSolucion(solucion &s, int n_sel) {
+  int seleccionados = 0, n_aleatorio;
+
+  for(unsigned i = 0; i < s.v.size(); ++i)
+    if(s.v[i])
+      seleccionados++;
+  while(seleccionados > n_sel){
+    n_aleatorio = rand() % s.v.size();
+    if(s.v[n_aleatorio]){
+      s.v[n_aleatorio] = !s.v[n_aleatorio];
+      --seleccionados;
+    }
+  }
+  while(seleccionados < n_sel){
+    n_aleatorio = rand() % s.v.size();
+    if(!s.v[n_aleatorio]){
+      s.v[n_aleatorio] = !s.v[n_aleatorio];
+      ++seleccionados;
+    }
+  }
+}
+
 /* Metodo de cruce entre soluciones
 
 Parametros:
   - padre1 = una solucion a cruzar
   - padre2 = la otra solucion a cruzar
-  - hijo1 = una solucion ya cruzada
-  - hijo2 = la otra solucion ya cruzada
 */
-void crucePosicion(solucion &padre1, solucion &padre2, solucion &hijo1, solucion &hijo2){
-  hijo1 = padre1;
-  hijo2 = padre2;
-  hijo1.evaluada = false;
-  hijo2.evaluada = false;
-
-  vector<bool> shuffled (padre1.v.size(), false);
-  vector<bool> to_shuffle, to_shuffle2;
+solucion cruceUniforme(solucion &padre1, solucion &padre2) {
+  solucion hijo = padre1;
+  hijo.evaluada = false;
+  int n_sel = 0, n_aleatorio;
 
   for(unsigned i = 0; i < padre1.v.size(); ++i){
-    if(padre1.v[i] == padre2.v[i]){
-      hijo1.v[i] = padre1.v[i];
-      hijo2.v[i] = padre1.v[i];
+    if(padre1.v[i])
+      ++n_sel;
+    if(padre1.v[i] && padre2.v[i]){
+      hijo.v[i] = true;
+    } else if(!padre1.v[i] && !padre2.v[i]){
+      hijo.v[i] = false;
     } else{
-      shuffled[i] = true;
-      to_shuffle.push_back(padre1.v[i]);
+      n_aleatorio = rand() % 2;
+      hijo.v[i] = (n_aleatorio == 0);
     }
   }
-  random_shuffle(to_shuffle.begin(), to_shuffle.end());
-  to_shuffle2 = to_shuffle;
-  random_shuffle(to_shuffle2.begin(), to_shuffle2.end());
-
-  int j = 0;
-  for(unsigned i = 0; i < padre1.v.size(); ++i){
-    if(shuffled[i]){
-      hijo1.v[i] = to_shuffle[j];
-      hijo2.v[i] = to_shuffle2[j];
-      ++j;
-    }
-  }
+  repararSolucion(hijo, n_sel);
+  return hijo;
 }
 
 /* Metodo de cruce entre la poblacion
@@ -238,11 +413,13 @@ void cruce(poblacion &p, double probabilidad_cruce){
     do{
       i2 = rand() % p.n_individuos;
     } while (i1 == i2);
-    crucePosicion(p.v[i1], p.v[i2], hijo1, hijo2);
+    hijo1 = cruceUniforme(p.v[i1], p.v[i2]);
+    hijo2 = cruceUniforme(p.v[i1], p.v[i2]);
     p.v[i1] = hijo1;
     p.v[i2] = hijo2;
   }
 }
+
 
 /* Metodo de mutacion entre la solucion
 
@@ -251,7 +428,7 @@ Parametros:
   - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
   - m = matriz de distancias
 */
-void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
+void mutarSolucion(solucion &s, int &evaluaciones, vector<vector<double>> &m){
   int n_aleatorio1, n_aleatorio2;
 
   do {
@@ -268,7 +445,7 @@ void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
     double antiguo_coste = distanciaAUnConjunto(n_aleatorio2, s.v, m) - m[n_aleatorio2][n_aleatorio1];
     double nuevo_coste = distanciaAUnConjunto(n_aleatorio1, s.v, m);
     s.coste = s.coste + nuevo_coste - antiguo_coste;
-    ++iteraciones;
+    ++evaluaciones;
   }
 }
 
@@ -280,11 +457,11 @@ Parametros:
   - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
   - m = matriz de distancias
 */
-void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<vector<double>> &m){
+void mutarPoblacion(poblacion &p, double &p_mutacion, int &evaluaciones, vector<vector<double>> &m){
   int numero_aleatorio = 0, n_mutaciones = p_mutacion * p.n_individuos * m.size();
   for(int i = 0; i < n_mutaciones; ++i){
     numero_aleatorio = rand() % p.n_individuos;
-    mutarSolucion(p.v[numero_aleatorio], iteraciones, m);
+    mutarSolucion(p.v[numero_aleatorio], evaluaciones, m);
   }
   if(p.max_coste < p.v[numero_aleatorio].coste){
     p.mejor_solucion = numero_aleatorio;
@@ -322,30 +499,66 @@ void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva
   }
 }
 
+// Tipo 0 = Poblacion entera cada 10 iteraciones
+// Tipo 1 = Cada elemento con probabilidad p_busqueda_local
+// Tipo 2 = Unicamente el mejor de la pob
+void memetizar(poblacion &poblacion, int tipo, int max_evaluaciones, int &evaluaciones, double p_busqueda_local) {
+  if(tipo == 0){
+    for(int i = 0; i < poblacion.n_individuos; ++i){
+      evaluaciones += localSearch(poblacion.v[i], max_evaluaciones);
+      evaluarSolucion(poblacion.v[i]);
+      if(poblacion.v[i].coste > poblacion.max_coste){
+        poblacion.max_coste = poblacion.v[i].coste;
+        poblacion.mejor_solucion = i;
+      }
+    }
+  } else if(tipo == 1){
+    int numero_memetizaciones = poblacion.n_individuos * p_busqueda_local;
+    for(int i = 0; i < numero_memetizaciones; ++i){
+      int numero_aleatorio = rand() % poblacion.n_individuos;
+      evaluaciones += localSearch(poblacion.v[numero_aleatorio], max_evaluaciones);
+      evaluarSolucion(poblacion.v[numero_aleatorio]);
+      if(poblacion.v[numero_aleatorio].coste > poblacion.max_coste){
+        poblacion.max_coste = poblacion.v[numero_aleatorio].coste;
+        poblacion.mejor_solucion = numero_aleatorio;
+      }
+    }
+  } else if(tipo == 2){
+    //ARREGLAR
+    cout << "\nNO HECHO" << endl;
+    evaluaciones += localSearch(poblacion.v[poblacion.mejor_solucion], max_evaluaciones);
+    evaluarSolucion(poblacion.v[ poblacion.mejor_solucion]);
+    poblacion.max_coste = poblacion.v[poblacion.mejor_solucion].coste;
+  }
+}
+
 /* Metodo de general del algoritmo
 
 Parametros:
   - m = matriz de distancias
   - n = numero de elementos a seleccionar
   - MAX_EVALUACIONES = numero de evaluaciones maximo permitido
+  - tipo = tipo de la memetizacion
 */
-double AGGposicion(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
-  int evaluaciones = 0, generaciones = 0, n_individuos = 50;
-  double p_mutacion = 0.001, p_cruce = 0.7;
+double AM(vector<vector<double>> &m, int n, int MAX_EVALUACIONES, int tipo){
+  int evaluaciones = 0, generaciones = 0, n_individuos = 50, max_evaluaciones_bl = 400;
+  double p_mutacion = 0.001, p_cruce = 0.7, p_busqueda_local = 0.1;
   clock_t t_total, t_inicio;
-  poblacion poblacion_nueva, poblacion_actual;
+  poblacion poblacion_actual, poblacion_nueva;
 
   t_inicio = clock();
-  inicializarPoblacion(m, poblacion_actual, n_individuos, n);
-  evaluarPoblacion(poblacion_actual, evaluaciones, m);
+  inicializarPoblacion(m, poblacion, n_individuos, n);
+  evaluarPoblacion(poblacion, evaluaciones, m);
 
   while (evaluaciones < MAX_EVALUACIONES) {
     generaciones++;
     seleccionarIndividuos(poblacion_actual, poblacion_nueva);
     cruce(poblacion_nueva, p_cruce);
-    mutarPoblacion(poblacion_nueva, p_mutacion, evaluaciones, m);
-    evaluarPoblacion(poblacion_nueva, evaluaciones, m);
+    mutarPoblacion(poblacion_nueva, p_mutacion, n, evaluaciones, m);
+    evaluarPoblacion(poblacion_nueva, evaluaciones);
     reemplazarPoblacion(poblacion_actual, poblacion_nueva);
+    if((generaciones % 10) == 0)
+      memetizar(poblacion_actual, tipo, max_evaluaciones_bl, evaluaciones, p_busqueda_local);
   }
 
   t_total = clock() - t_inicio;
@@ -354,7 +567,6 @@ double AGGposicion(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   cout << resultado.coste << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << generaciones << "\t" << evaluaciones << endl;
   return resultado.coste;
 }
-
 
 /* --------------------------- MAIN ---------------------------*/
 
@@ -369,8 +581,10 @@ int main(int argc, char *argv[]){
   leerDatos(m); // inicializo la matriz de entradas
 
   int semilla = atoi(argv[1]);
+  int tipo = atoi(argv[2]);
+  cout << "\n\nCOMPROBACIONES TIPO\n" << endl;
   // Fijamos la semilla
   srand(semilla);
 
-  AGGposicion(m, n_sel, MAX_EVALUACIONES); // aplico el algoritmo AGGuniforme
+  AM(m, n_sel, MAX_EVALUACIONES, tipo); // aplico el algoritmo AGGuniforme
 }
