@@ -9,6 +9,35 @@ using namespace std;
 
 ////////////////// LOCAL SEARCH ///////////////////////
 
+// Estructura para representar una solucion en representacion entera
+struct solucion_ints{
+  vector<int> v;  // Vector de enteros donde cada entero indica que punto del
+                  // dominio pertenece a la solucion.
+  double coste;   // Diversidad de la solucion
+};
+
+// Estructura para representar una solucion
+struct solucion{
+  vector<bool> v;   // Vector de 1's y 0's donde 1 en la posicion i significa
+                    // que pertenece el elemento i a la solucion.
+  double coste;     // Diversidad de la solucion
+  bool evaluada;    // Flag que comprueba si esta o no evaluada la solucion
+};
+
+// Estructura para representar una poblacion
+class poblacion{
+  public:
+    vector<solucion> v;   // Vector de soluciones
+    double max_coste;     // Diversidad de la solucion con mayor diversidad
+    int mejor_solucion;   // Indice en el vector con la mejor solucion
+    int n_individuos;     // Numero de individuos de la solucion
+
+    poblacion(){
+      mejor_solucion = 0;
+      n_individuos = 0;
+      max_coste = 0;
+    }
+};
 
 /* Sobrecargamos el operador "menor que" entre dos parejas.
 Así una pareja p1 será menor que otra p2 (p1 < p2) si y solo si la segunda
@@ -20,86 +49,6 @@ Parametros:
 */
 bool operator <(const pair<int,double> &p1, const pair<int,double> &p2){
     return p1.second < p2.second;
-}
-
-/* Ordena el vector de índices de la solución de menor a mayor por la contribution
-de éstos elementos al coste
-
-Parametros:
-  - s = solucion a actualizar
-  - m = matriz de distancias
-*/
-void ordenaSolucionPorContribucion(solucion &s, vector<vector<double>> &m){
-  // Creamos un vector de parejas (indice_solución-distancia_al_resto (o coste))
-  pair<int, double> p(0, 0.0);
-  vector<pair<int, double>> parejas(s.v.size(), p);
-
-  for(unsigned i = 0; i < parejas.size(); ++i){
-    parejas[i].first = s.v[i];
-    parejas[i].second = distanciaAUnConjunto(parejas[i].first, s.v, m);
-  }
-  // Ordenamos dichas parejas por la distribución, para ello necesitamos
-  // sobrecargar el operador <
-  sort(parejas.begin(), parejas.end());
-  // Guardamos la solucion ordenada
-  for(unsigned i = 0; i < parejas.size(); ++i)
-    s.v[i] = parejas[i].first;
-}
-
-// Computes a single step in the exploration, changing "sol"
-bool exploracionVecindario (solucion_ints &sol, int &evaluations, int MAX) {
-  double percentage_studied;
-  unsigned i = 0, j, element_out, total_tries, max_i, max_randoms, k;
-  double newContribution, oldContribution;
-  int real_evaluations = 0;
-
-  orderSolutionByContribution(sol);
-
-  // percentage_studied = 0.1;
-  // total_tries = 50000;
-
-  percentage_studied = 0.1;
-  total_tries = MAX;
-
-  max_i = max(percentage_studied * sol.v.size(), 1.0);
-  max_randoms = total_tries / max_i;
-
-  // Fill hash with our used values
-  unordered_set<int> s;
-  for (unsigned i=0; i<sol.v.size(); i++) {
-    s.insert( sol.v[i] );
-  }
-
-  // Explore the neighbourhood and return the firstly found better option
-  while (i < max_i) {
-    // Save data of the element we are trying to swap
-    element_out = sol.v[i];
-    oldContribution = singleContribution(sol.v, element_out);
-
-    k = 0;
-    j = rand() % MAT.size();
-    while (j < MAT.size() && k < max_randoms) {
-      // Try the swap if the element 'j' is not in the current solution
-      if ( s.find(j) == s.end() ) {
-        newContribution = singleContribution(sol.v, j) - MAT[j][element_out];
-        if ( newContribution > oldContribution ) {
-          sol.v[i] = j;
-          sol.fitness = sol.fitness + newContribution - oldContribution;
-          return false;
-        }
-        k++;
-
-        real_evaluations++;
-        if (real_evaluations % sol.v.size() == 0) {
-          evaluations++;
-          real_evaluations = 0;
-        }
-      }
-      j = rand() % MAT.size();
-    }
-    i++;
-  }
-  return true;
 }
 
 /* Dado un conjunto de elementos y un elemento concreto, calcula la distancia
@@ -136,20 +85,98 @@ double costeSolucion(T &conjunto, vector<vector<double>> &m) {
   return coste /= 2;
 }
 
-// Estructura para representar una solucion en representacion entera
-struct solucion_ints{
-  vector<int> v;  // Vector de enteros donde cada entero indica que punto del
-                  // dominio pertenece a la solucion.
-  double coste;   // Diversidad de la solucion
-};
+/* Ordena el vector de índices de la solución de menor a mayor por la contribution
+de éstos elementos al coste
+
+Parametros:
+  - s = solucion a actualizar
+  - m = matriz de distancias
+*/
+void ordenaSolucionPorContribucion(solucion_ints &s, vector<vector<double>> &m){
+  // Creamos un vector de parejas (indice_solución-distancia_al_resto (o coste))
+  pair<int, double> p(0, 0.0);
+  vector<pair<int, double>> parejas(s.v.size(), p);
+
+  for(unsigned i = 0; i < parejas.size(); ++i){
+    parejas[i].first = s.v[i];
+    parejas[i].second = distanciaAUnConjunto(parejas[i].first, s.v, m);
+  }
+  // Ordenamos dichas parejas por la distribución, para ello necesitamos
+  // sobrecargar el operador <
+  sort(parejas.begin(), parejas.end());
+  // Guardamos la solucion ordenada
+  for(unsigned i = 0; i < parejas.size(); ++i)
+    s.v[i] = parejas[i].first;
+}
+
+/* Explora el vecindario intercambiando puntos para ver si mejoramos la solución
+
+Parametros:
+  - s = solucion a mejorar
+  - m = matriz de distancias
+*/
+bool exploracionVecindario(solucion_ints &s, int &evaluaciones, int max_evaluaciones, vector<vector<double>> &m){
+  unsigned i = 0, j, k, elemento_auxiliar, limite_evaluaciones;
+  double antigua_contribucion, nueva_contribucion;
+  unordered_set<int> conjunto;
+  int evaluaciones_reales = 0;
+
+  // Ordenamos la solución por contribución
+  ordenaSolucionPorContribucion(s, m);
+
+  // Igualamos el número de evaluaciones que comprobaremos para cada índice de la
+  // solución
+  limite_evaluaciones = max_evaluaciones / s.v.size();
+
+  // Rellenamos la estructura auxiliar conjunto con los elementos de la solución
+  for(unsigned z = 0; z < s.v.size(); ++z)
+    conjunto.insert(s.v[z]);
+
+  // Para cada índice (elemento de la solución), buscamos elementos entre sus
+  // vecinos que mejoren la solución.
+  while(i < s.v.size()){
+    // Guardamos el índice anterior y buscamos uno nuevo
+    elemento_auxiliar = s.v[i];
+    antigua_contribucion = distanciaAUnConjunto(elemento_auxiliar, s.v, m);
+    k = 0;
+    // Elegimos un índice aleatorio
+    j = rand() % m.size();
+
+    // Comprobamos que no nos pasemos del límite de evaluaciones.
+    while(k < limite_evaluaciones){
+      // Comprobamos que el elemento no pertenezca a la solución
+      if(conjunto.find(j) == conjunto.end()){
+        // Calculamos la nueva contribución que generaría dicho elemento al
+        // hacer el intercambio con el elemento anterior.
+        nueva_contribucion = distanciaAUnConjunto(j, s.v, m) - m[j][elemento_auxiliar];
+        // Comprobamos si la nueva contribución mejora a la anterior
+        if(nueva_contribucion > antigua_contribucion){
+          // Realizamos el intercambio y pasamos a la siguiente evaluacion.
+          s.v[i] = j;
+          s.coste = s.coste + nueva_contribucion - antigua_contribucion;
+          return false;
+        }
+        ++k;
+        ++evaluaciones_reales;
+        if (evaluaciones_reales % s.v.size() == 0) {
+          ++evaluaciones;
+          evaluaciones_reales = 0;
+        }
+      }
+      j = rand() % m.size();
+    }
+    i++;
+  }
+  return true;
+}
 
 /* Actualizamos el coste de la solucion.
 
 Parametros:
   - s = solucion en representacion de ints.
 */
-double actualizarSolucion(solucion_ints &s) {
-  s.coste = costeSolucion(s.v);
+double actualizarSolucion(solucion_ints &s, vector<vector<double>> &m) {
+  s.coste = costeSolucion(s.v, m);
   return s.coste;
 }
 
@@ -193,7 +220,7 @@ int busquedaLocal(vector<vector<double>> &m, solucion &s_bits, int max_evaluacio
   int evaluaciones = 0;
 
   pasarDeBitsAInts(s_bits, s_ints);
-  actualizarSolucion(s_ints);
+  actualizarSolucion(s_ints, m);
 
   while(!parada && evaluaciones < max_evaluaciones)
     parada = exploracionVecindario(s_ints, evaluaciones, max_evaluaciones - evaluaciones, m);
@@ -203,29 +230,6 @@ int busquedaLocal(vector<vector<double>> &m, solucion &s_bits, int max_evaluacio
 }
 
 ///////////////////////////// GENETIC ///////////////////////////////////////
-
-// Estructura para representar una solucion
-struct solucion{
-  vector<bool> v;   // Vector de 1's y 0's donde 1 en la posicion i significa
-                    // que pertenece el elemento i a la solucion.
-  double coste;     // Diversidad de la solucion
-  bool evaluada;    // Flag que comprueba si esta o no evaluada la solucion
-};
-
-// Estructura para representar una poblacion
-class poblacion{
-  public:
-    vector<solucion> v;   // Vector de soluciones
-    double max_coste;     // Diversidad de la solucion con mayor diversidad
-    int mejor_solucion;   // Indice en el vector con la mejor solucion
-    int n_individuos;     // Numero de individuos de la solucion
-
-    poblacion(){
-      mejor_solucion = 0;
-      n_individuos = 0;
-      max_coste = 0;
-    }
-};
 
 /* Rellena la matriz de distancias
 
@@ -335,11 +339,11 @@ Parametros:
   - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
   - m = matriz de distancias
 */
-void evaluarPoblacion(poblacion &p, int &iteraciones, vector<vector<double>> &m){
+void evaluarPoblacion(poblacion &p, int &evaluaciones, vector<vector<double>> &m){
   for(int i = 0; i < p.n_individuos; ++i){
     if(!p.v[i].evaluada){
       evaluarSolucion(p.v[i], m);
-      ++iteraciones;
+      ++evaluaciones;
       if(p.v[i].coste > p.max_coste){
         p.mejor_solucion = i;
         p.max_coste = p.v[i].coste;
@@ -547,7 +551,7 @@ void memetizar(poblacion &poblacion, int tipo, int max_evaluaciones, int &evalua
   if(tipo == 0){
     for(int i = 0; i < poblacion.n_individuos; ++i){
       evaluaciones += busquedaLocal(m, poblacion.v[i], max_evaluaciones);
-      evaluarSolucion(poblacion.v[i]);
+      evaluarSolucion(poblacion.v[i], m);
       if(poblacion.v[i].coste > poblacion.max_coste){
         poblacion.max_coste = poblacion.v[i].coste;
         poblacion.mejor_solucion = i;
@@ -558,7 +562,7 @@ void memetizar(poblacion &poblacion, int tipo, int max_evaluaciones, int &evalua
     for(int i = 0; i < numero_memetizaciones; ++i){
       int numero_aleatorio = rand() % poblacion.n_individuos;
       evaluaciones += busquedaLocal(m, poblacion.v[numero_aleatorio], max_evaluaciones);
-      evaluarSolucion(poblacion.v[numero_aleatorio]);
+      evaluarSolucion(poblacion.v[numero_aleatorio], m);
       if(poblacion.v[numero_aleatorio].coste > poblacion.max_coste){
         poblacion.max_coste = poblacion.v[numero_aleatorio].coste;
         poblacion.mejor_solucion = numero_aleatorio;
@@ -568,7 +572,7 @@ void memetizar(poblacion &poblacion, int tipo, int max_evaluaciones, int &evalua
     //ARREGLAR
     cout << "\nNO HECHO" << endl;
     evaluaciones += busquedaLocal(m, poblacion.v[poblacion.mejor_solucion], max_evaluaciones);
-    evaluarSolucion(poblacion.v[ poblacion.mejor_solucion]);
+    evaluarSolucion(poblacion.v[ poblacion.mejor_solucion], m);
     poblacion.max_coste = poblacion.v[poblacion.mejor_solucion].coste;
   }
 }
@@ -588,15 +592,15 @@ double AM(vector<vector<double>> &m, int n, int MAX_EVALUACIONES, int tipo){
   poblacion poblacion_actual, poblacion_nueva;
 
   t_inicio = clock();
-  inicializarPoblacion(m, poblacion, n_individuos, n);
-  evaluarPoblacion(poblacion, evaluaciones, m);
+  inicializarPoblacion(m, poblacion_actual, n_individuos, n);
+  evaluarPoblacion(poblacion_actual, evaluaciones, m);
 
   while (evaluaciones < MAX_EVALUACIONES) {
     generaciones++;
     seleccionarIndividuos(poblacion_actual, poblacion_nueva);
     cruce(poblacion_nueva, p_cruce);
-    mutarPoblacion(poblacion_nueva, p_mutacion, n, evaluaciones, m);
-    evaluarPoblacion(poblacion_nueva, evaluaciones);
+    mutarPoblacion(poblacion_nueva, p_mutacion, evaluaciones, m);
+    evaluarPoblacion(poblacion_nueva, evaluaciones, m);
     reemplazarPoblacion(poblacion_actual, poblacion_nueva);
     if((generaciones % 10) == 0)
       memetizar(poblacion_actual, tipo, max_evaluaciones_bl, evaluaciones, p_busqueda_local, m);
@@ -615,17 +619,23 @@ int main(int argc, char *argv[]){
   int n_total, n_sel; // n_total = número de elementos &&
                       // n_sel = el número de elementos a seleccionar del problema
   const int MAX_EVALUACIONES = 50000;
+  if(argc != 3) {
+    cout << "No ha introducido los parametros correctos.\nRecuerde: ./AM semilla tipo" << endl;
+    exit(1);
+  }
+  int semilla = atoi(argv[1]);
+  int tipo = atoi(argv[2]);
+  // Fijamos la semilla
+  srand(semilla);
 
+  if(tipo != 0 && tipo != 1 && tipo != 2){
+    cout << "El tipo debe ser un valor de entre {0, 1, 2}" << endl;
+    exit(1);
+  }
   cin >> n_total >> n_sel; // inicializo los valores con la primera línea del fichero
   vector<double> v(n_total, 0);
   vector<vector<double>> m(n_total, v); // m = matriz de entradas
   leerDatos(m); // inicializo la matriz de entradas
-
-  int semilla = atoi(argv[1]);
-  int tipo = atoi(argv[2]);
-  cout << "\n\nCOMPROBACIONES TIPO\n" << endl;
-  // Fijamos la semilla
-  srand(semilla);
 
   AM(m, n_sel, MAX_EVALUACIONES, tipo); // aplico el algoritmo AGGuniforme
 }
