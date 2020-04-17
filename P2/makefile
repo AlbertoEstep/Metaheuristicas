@@ -6,7 +6,8 @@ ENTRADA=./entrada
 OPT=-Wall -O2
 SEMILLA=1234567
 
-all: clean P2AGGuniformeEjemplos P2AGGposicionEjemplos P2AGEuniformeEjemplos P2AGEposicionEjemplos
+#all: clean P2AGGuniformeEjemplos P2AGGposicionEjemplos P2AGEuniformeEjemplos P2AGEposicionEjemplos P2AMTipo0Ejemplos P2AMTipo1Ejemplos P2AMTipo2Ejemplos
+all: clean P2AGGuniformeEjemplos P2AGGposicionEjemplos P2AMTipo0Ejemplos P2AMTipo1Ejemplos P2AMTipo2Ejemplos
 
 # Compilación
 $(BIN)/AGG_uniforme:

@@ -189,29 +189,73 @@ void seleccionarIndividuos(poblacion &p, solucion &padre1, solucion &padre2){
   padre2 = p.v[hijo2];
 }
 
+/* Elegir el elemento de los seleccionados que aporta mayor diversidad
+
+Parametros:
+  - s = solucion
+  - m = matriz de distancias
+*/
+int elegirMayorContribucionSeleccionados(solucion &s, vector<vector<double>> &m){
+  int i_max_coste = 0, n_solucion = s.v.size();
+  double max_aportacion = 0, aportacion_diversidad;
+  for(int i = 0; i < n_solucion; ++i){
+    if(s.v[i]){
+      aportacion_diversidad = distanciaAUnConjunto(i, s.v, m);
+      if(aportacion_diversidad > max_aportacion){
+        i_max_coste = i;
+        max_aportacion = aportacion_diversidad;
+      }
+    }
+  }
+  return i_max_coste;
+}
+
+/* Elegir el elemento de los no seleccionados que aporta mayor diversidad
+
+Parametros:
+  - s = solucion
+  - m = matriz de distancias
+*/
+int elegirMayorContribucionNoSeleccionados(solucion &s, vector<vector<double>> &m) {
+  int i_max_coste = 0, n_solucion = s.v.size();
+  double max_aportacion = 0, aportacion_diversidad;
+  for(int i = 0; i < n_solucion; ++i){
+    if(!s.v[i]){
+      aportacion_diversidad = distanciaAUnConjunto(i, s.v, m);
+      if(aportacion_diversidad > max_aportacion){
+        i_max_coste = i;
+        max_aportacion = aportacion_diversidad;
+      }
+    }
+  }
+  return i_max_coste;
+}
+
 /* Metodo de reparacion de la solucion
 
 Parametros:
   - s = solucion a reparar
   - n_sel = numero de elementos que formaran la solucion
+  - m = matriz distancias
 */
-void repararSolucion(solucion &s, int n_sel) {
-  int seleccionados = 0, n_aleatorio;
+void repararSolucion(solucion &s, int n_sel, vector<vector<double>> &m) {
+  int seleccionados = 0, i_max_coste;
 
   for(unsigned i=0; i<s.v.size(); ++i)
     if(s.v[i])
       seleccionados++;
+
   while(seleccionados > n_sel){
-    n_aleatorio = rand() % s.v.size();
-    if(s.v[n_aleatorio]){
-      s.v[n_aleatorio] = !s.v[n_aleatorio];
+    i_max_coste = elegirMayorContribucionSeleccionados(s, m);
+    if(s.v[i_max_coste]){
+      s.v[i_max_coste] = false;
       --seleccionados;
     }
   }
   while(seleccionados < n_sel){
-    n_aleatorio = rand() % s.v.size();
-    if(!s.v[n_aleatorio]){
-      s.v[n_aleatorio] = !s.v[n_aleatorio];
+    i_max_coste = elegirMayorContribucionNoSeleccionados(s, m);
+    if(!s.v[i_max_coste]){
+      s.v[i_max_coste] = true;
       ++seleccionados;
     }
   }

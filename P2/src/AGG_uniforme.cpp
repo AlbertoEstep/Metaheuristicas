@@ -182,29 +182,73 @@ void seleccionarIndividuos(poblacion &poblacion_actual, poblacion &poblacion_nue
   }
 }
 
+/* Elegir el elemento de los seleccionados que aporta mayor diversidad
+
+Parametros:
+  - s = solucion
+  - m = matriz de distancias
+*/
+int elegirMayorContribucionSeleccionados(solucion &s, vector<vector<double>> &m){
+  int i_max_coste = 0, n_solucion = s.v.size();
+  double max_aportacion = 0, aportacion_diversidad;
+  for(int i = 0; i < n_solucion; ++i){
+    if(s.v[i]){
+      aportacion_diversidad = distanciaAUnConjunto(i, s.v, m);
+      if(aportacion_diversidad > max_aportacion){
+        i_max_coste = i;
+        max_aportacion = aportacion_diversidad;
+      }
+    }
+  }
+  return i_max_coste;
+}
+
+/* Elegir el elemento de los no seleccionados que aporta mayor diversidad
+
+Parametros:
+  - s = solucion
+  - m = matriz de distancias
+*/
+int elegirMayorContribucionNoSeleccionados(solucion &s, vector<vector<double>> &m) {
+  int i_max_coste = 0, n_solucion = s.v.size();
+  double max_aportacion = 0, aportacion_diversidad;
+  for(int i = 0; i < n_solucion; ++i){
+    if(!s.v[i]){
+      aportacion_diversidad = distanciaAUnConjunto(i, s.v, m);
+      if(aportacion_diversidad > max_aportacion){
+        i_max_coste = i;
+        max_aportacion = aportacion_diversidad;
+      }
+    }
+  }
+  return i_max_coste;
+}
+
 /* Metodo de reparacion de la solucion
 
 Parametros:
   - s = solucion a reparar
   - n_sel = numero de elementos que formaran la solucion
+  - m = matriz distancias
 */
-void repararSolucion(solucion &s, int n_sel) {
-  int seleccionados = 0, n_aleatorio;
+void repararSolucion(solucion &s, int n_sel, vector<vector<double>> &m) {
+  int seleccionados = 0, i_max_coste;
 
   for(unsigned i=0; i<s.v.size(); ++i)
     if(s.v[i])
       seleccionados++;
+
   while(seleccionados > n_sel){
-    n_aleatorio = rand() % s.v.size();
-    if(s.v[n_aleatorio]){
-      s.v[n_aleatorio] = !s.v[n_aleatorio];
+    i_max_coste = elegirMayorContribucionSeleccionados(s, m);
+    if(s.v[i_max_coste]){
+      s.v[i_max_coste] = false;
       --seleccionados;
     }
   }
   while(seleccionados < n_sel){
-    n_aleatorio = rand() % s.v.size();
-    if(!s.v[n_aleatorio]){
-      s.v[n_aleatorio] = !s.v[n_aleatorio];
+    i_max_coste = elegirMayorContribucionNoSeleccionados(s, m);
+    if(!s.v[i_max_coste]){
+      s.v[i_max_coste] = true;
       ++seleccionados;
     }
   }
@@ -216,7 +260,7 @@ Parametros:
   - padre1 = una solucion a cruzar
   - padre2 = la otra solucion a cruzar
 */
-solucion cruceUniforme(solucion &padre1, solucion &padre2) {
+solucion cruceUniforme(solucion &padre1, solucion &padre2, vector<vector<double>> &m) {
   solucion hijo = padre1;
   hijo.evaluada = false;
   int n_sel = 0, n_aleatorio;
@@ -233,7 +277,7 @@ solucion cruceUniforme(solucion &padre1, solucion &padre2) {
       hijo.v[i] = (n_aleatorio == 0);
     }
   }
-  repararSolucion(hijo, n_sel);
+  repararSolucion(hijo, n_sel, m);
   return hijo;
 }
 
@@ -243,7 +287,7 @@ Parametros:
   - p = poblacion a cruzar
   - probabilidad_cruce = probabilidad de dos individuos de cruzarse
 */
-void cruce(poblacion &p, double probabilidad_cruce){
+void cruce(poblacion &p, double probabilidad_cruce, vector<vector<double>> &m){
   int n_cruces = probabilidad_cruce * p.n_individuos / 2 ;
   int i1, i2;
   solucion hijo1, hijo2;
@@ -253,8 +297,8 @@ void cruce(poblacion &p, double probabilidad_cruce){
     do{
       i2 = rand() % p.n_individuos;
     } while (i1 == i2);
-    hijo1 = cruceUniforme(p.v[i1], p.v[i2]);
-    hijo2 = cruceUniforme(p.v[i1], p.v[i2]);
+    hijo1 = cruceUniforme(p.v[i1], p.v[i2], m);
+    hijo2 = cruceUniforme(p.v[i1], p.v[i2], m);
     p.v[i1] = hijo1;
     p.v[i2] = hijo2;
   }
@@ -360,7 +404,7 @@ double AGGuniforme(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   while (evaluaciones < MAX_EVALUACIONES) {
     generaciones++;
     seleccionarIndividuos(poblacion_actual, poblacion_nueva);
-    cruce(poblacion_nueva, p_cruce);
+    cruce(poblacion_nueva, p_cruce, m);
     mutarPoblacion(poblacion_nueva, p_mutacion, evaluaciones, m);
     evaluarPoblacion(poblacion_nueva, evaluaciones, m);
     reemplazarPoblacion(poblacion_actual, poblacion_nueva);
@@ -391,5 +435,4 @@ int main(int argc, char *argv[]){
   srand(semilla);
 
   AGGuniforme(m, n_sel, MAX_EVALUACIONES); // aplico el algoritmo AGGuniforme
-  cout << "FALTA REPARACION!!!!!" << endl;
 }
