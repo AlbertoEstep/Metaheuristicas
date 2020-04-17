@@ -267,7 +267,7 @@ Parametros:
   - padre1 = una solucion a cruzar
   - padre2 = la otra solucion a cruzar
 */
-solucion cruceUniforme(solucion &padre1, solucion &padre2) {
+solucion cruceUniforme(solucion &padre1, solucion &padre2, vector<vector<double>> &m) {
   solucion hijo = padre1;
   hijo.evaluada = false;
   int n_sel = 0, n_aleatorio;
@@ -284,7 +284,7 @@ solucion cruceUniforme(solucion &padre1, solucion &padre2) {
       hijo.v[i] = (n_aleatorio == 0);
     }
   }
-  repararSolucion(hijo, n_sel);
+  repararSolucion(hijo, n_sel, m);
   return hijo;
 }
 
@@ -296,9 +296,9 @@ Parametros:
   - hijo1 = solucion obtenida al cruzar padre1 y padre2 la primera vez
   - hijo2 = solucion obtenida al cruzar padre1 y padre2 la segunda vez
 */
-void cruce(solucion &padre1, solucion &padre2, solucion &hijo1, solucion &hijo2){
-  hijo1 = cruceUniforme(padre1, padre2);
-  hijo2 = cruceUniforme(padre1, padre2);
+void cruce(solucion &padre1, solucion &padre2, solucion &hijo1, solucion &hijo2, vector<vector<double>> &m){
+  hijo1 = cruceUniforme(padre1, padre2, m);
+  hijo2 = cruceUniforme(padre1, padre2, m);
 }
 
 /* Metodo de mutacion entre la solucion
@@ -385,7 +385,7 @@ double AGGuniforme(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   while(evaluaciones < MAX_EVALUACIONES){
     generaciones++;
     seleccionarIndividuos(poblacion, padre1, padre2);
-    cruce(padre1, padre2, hijo1, hijo2);
+    cruce(padre1, padre2, hijo1, hijo2, m);
     mutarPoblacion(hijo1, hijo2, p_mutacion, evaluaciones, m);
     evaluarSolucion(hijo1, m);
     evaluarSolucion(hijo2, m);

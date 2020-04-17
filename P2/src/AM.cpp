@@ -465,7 +465,7 @@ Parametros:
   - padre1 = una solucion a cruzar
   - padre2 = la otra solucion a cruzar
 */
-solucion cruceUniforme(solucion &padre1, solucion &padre2) {
+solucion cruceUniforme(solucion &padre1, solucion &padre2, vector<vector<double>> &m) {
   solucion hijo = padre1;
   hijo.evaluada = false;
   int n_sel = 0, n_aleatorio;
@@ -482,7 +482,7 @@ solucion cruceUniforme(solucion &padre1, solucion &padre2) {
       hijo.v[i] = (n_aleatorio == 0);
     }
   }
-  repararSolucion(hijo, n_sel);
+  repararSolucion(hijo, n_sel, m);
   return hijo;
 }
 
@@ -492,7 +492,7 @@ Parametros:
   - p = poblacion a cruzar
   - probabilidad_cruce = probabilidad de dos individuos de cruzarse
 */
-void cruce(poblacion &p, double probabilidad_cruce){
+void cruce(poblacion &p, double probabilidad_cruce, vector<vector<double>> &m){
   int n_cruces = probabilidad_cruce * p.n_individuos / 2 ;
   int i1, i2;
   solucion hijo1, hijo2;
@@ -502,8 +502,8 @@ void cruce(poblacion &p, double probabilidad_cruce){
     do{
       i2 = rand() % p.n_individuos;
     } while (i1 == i2);
-    hijo1 = cruceUniforme(p.v[i1], p.v[i2]);
-    hijo2 = cruceUniforme(p.v[i1], p.v[i2]);
+    hijo1 = cruceUniforme(p.v[i1], p.v[i2], m);
+    hijo2 = cruceUniforme(p.v[i1], p.v[i2], m);
     p.v[i1] = hijo1;
     p.v[i2] = hijo2;
   }
@@ -640,7 +640,7 @@ double AM(vector<vector<double>> &m, int n, int MAX_EVALUACIONES, int tipo){
   while (evaluaciones < MAX_EVALUACIONES) {
     generaciones++;
     seleccionarIndividuos(poblacion_actual, poblacion_nueva);
-    cruce(poblacion_nueva, p_cruce);
+    cruce(poblacion_nueva, p_cruce, m);
     mutarPoblacion(poblacion_nueva, p_mutacion, evaluaciones, m);
     evaluarPoblacion(poblacion_nueva, evaluaciones, m);
     reemplazarPoblacion(poblacion_actual, poblacion_nueva);
