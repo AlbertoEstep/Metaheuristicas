@@ -134,11 +134,11 @@ Parametros:
   - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
   - m = matriz de distancias
 */
-void evaluarPoblacion(poblacion &p, int &iteraciones, vector<vector<double>> &m){
+void evaluarPoblacion(poblacion &p, int &evaluaciones, vector<vector<double>> &m){
   for(int i = 0; i < p.n_individuos; ++i){
     if(!p.v[i].evaluada){
       evaluarSolucion(p.v[i], m);
-      ++iteraciones;
+      ++evaluaciones;
       if(p.v[i].coste > p.max_coste){
         p.mejor_solucion = i;
         p.max_coste = p.v[i].coste;
@@ -251,7 +251,7 @@ Parametros:
   - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
   - m = matriz de distancias
 */
-void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
+void mutarSolucion(solucion &s, int &evaluaciones, vector<vector<double>> &m){
   int n_aleatorio1, n_aleatorio2;
 
   do {
@@ -268,7 +268,7 @@ void mutarSolucion(solucion &s, int &iteraciones, vector<vector<double>> &m){
     double antiguo_coste = distanciaAUnConjunto(n_aleatorio2, s.v, m) - m[n_aleatorio2][n_aleatorio1];
     double nuevo_coste = distanciaAUnConjunto(n_aleatorio1, s.v, m);
     s.coste = s.coste + nuevo_coste - antiguo_coste;
-    ++iteraciones;
+    ++evaluaciones;
   }
 }
 
@@ -280,11 +280,11 @@ Parametros:
   - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
   - m = matriz de distancias
 */
-void mutarPoblacion(poblacion &p, double &p_mutacion, int &iteraciones, vector<vector<double>> &m){
+void mutarPoblacion(poblacion &p, double &p_mutacion, int &evaluaciones, vector<vector<double>> &m){
   int numero_aleatorio = 0, n_mutaciones = p_mutacion * p.n_individuos * m.size();
   for(int i = 0; i < n_mutaciones; ++i){
     numero_aleatorio = rand() % p.n_individuos;
-    mutarSolucion(p.v[numero_aleatorio], iteraciones, m);
+    mutarSolucion(p.v[numero_aleatorio], evaluaciones, m);
   }
   if(p.max_coste < p.v[numero_aleatorio].coste){
     p.mejor_solucion = numero_aleatorio;

@@ -364,16 +364,21 @@ void reemplazarPoblacion(poblacion &poblacion_actual, poblacion &poblacion_nueva
   int coste_minimo = poblacion_nueva.max_coste;
   int i;
 
+  // Si la población nueva es peor que la anterior
   if(poblacion_nueva.max_coste < poblacion_actual.max_coste){
+    // Busco el peor elemento de la poblacion nueva
     for(int j = 0; j < poblacion_nueva.n_individuos; ++j){
       if(poblacion_nueva.v[j].coste < coste_minimo){
         indice_peor_solucion = j;
         coste_minimo = poblacion_nueva.v[j].coste;
       }
     }
+    // Guardo la mejor solución de la poblacion actual
     i = poblacion_actual.mejor_solucion;
     mejor_solucion = poblacion_actual.v[i];
+    // Intercambio la soluciones
     poblacion_actual.v.swap(poblacion_nueva.v);
+    // Guardo la mejor solucion anterior en la poblacion nueva.
     poblacion_actual.v[indice_peor_solucion] = mejor_solucion;
   } else{
     poblacion_actual.v.swap(poblacion_nueva.v);
@@ -401,7 +406,7 @@ double AGGuniforme(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   inicializarPoblacion(m, poblacion_actual, n_individuos, n);
   evaluarPoblacion(poblacion_actual, evaluaciones, m);
 
-  while (evaluaciones < MAX_EVALUACIONES) {
+  while (evaluaciones < MAX_EVALUACIONES){
     generaciones++;
     seleccionarIndividuos(poblacion_actual, poblacion_nueva);
     cruce(poblacion_nueva, p_cruce, m);
