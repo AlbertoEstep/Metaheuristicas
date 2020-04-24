@@ -6,9 +6,8 @@ ENTRADA=./entrada
 OPT=-Wall -O2
 SEMILLA=1234567
 
-#all: clean P2AGGuniformeEjemplos P2AGGposicionEjemplos P2AGEuniformeEjemplos P2AGEposicionEjemplos P2AMTipo0Ejemplos P2AMTipo1Ejemplos P2AMTipo2Ejemplos
-#all: clean P2AGGuniformeResultados P2AGGposicionResultados P2AGEuniformeResultados P2AGEposicionResultados P2AMTipo0Resultados P2AMTipo1Resultados P2AMTipo2Resultados
-all: clean P2AMTipo2Resultados
+all: clean P2AGGuniformeEjemplos P2AGGposicionEjemplos P2AGEuniformeEjemplos P2AGEposicionEjemplos P2AMTipo0Ejemplos P2AMTipo1Ejemplos P2AMTipo2Ejemplos
+
 # Compilación
 $(BIN)/AGG_uniforme:
 	g++ $(OPT) $(SRC)/AGG_uniforme.cpp -o $(BIN)/AGG_uniforme
@@ -295,6 +294,9 @@ P2AMTipo2Resultados: $(BIN)/AM $(SRC)/AM.cpp
 	$(BIN)/AM $(SEMILLA) 2 < $(ENTRADA)/MDG-a_38_n2000_m200.txt
 	$(BIN)/AM $(SEMILLA) 2 < $(ENTRADA)/MDG-a_39_n2000_m200.txt
 	$(BIN)/AM $(SEMILLA) 2 < $(ENTRADA)/MDG-a_40_n2000_m200.txt
+
+Resultados: clean P2AGGuniformeResultados P2AGGposicionResultados P2AGEuniformeResultados P2AGEposicionResultados P2AMTipo0Resultados P2AMTipo1Resultados P2AMTipo2Resultados
+
 
 clean:
 	rm -f $(BIN)/*
