@@ -6,7 +6,7 @@ ENTRADA=./entrada
 OPT=-Wall -O2
 SEMILLA=1234567
 
-all: clean
+all: clean P3ESEjemplos
 
 # Compilación
 $(BIN)/ES:
