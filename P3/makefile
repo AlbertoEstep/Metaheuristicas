@@ -6,8 +6,8 @@ ENTRADA=./entrada
 OPT=-Wall -O2
 SEMILLA=1234567
 
-# all: clean P3ESEjemplos P3BMBEjemplos
-all: clean P3BMBEjemplos
+# all: clean P3ESEjemplos P3BMBEjemplos P3ILSEjemplos
+all: clean P3ILSEjemplos
 
 # Compilación
 $(BIN)/ES:
@@ -28,6 +28,16 @@ P3BMBEjemplos: $(BIN)/BMB $(SRC)/BMB.cpp
 	$(BIN)/BMB $(SEMILLA) < $(ENTRADA)/GKD-c_11_n500_m50.txt
 	$(BIN)/BMB $(SEMILLA) < $(ENTRADA)/MDG-b_1_n500_m50.txt
 	$(BIN)/BMB $(SEMILLA) < $(ENTRADA)/MDG-a_31_n2000_m200.txt
+
+# Compilación
+$(BIN)/ILS:
+	g++ $(OPT) $(SRC)/ILS.cpp -o $(BIN)/ILS
+
+# Ejemplo
+P3ILSEjemplos: $(BIN)/ILS $(SRC)/ILS.cpp
+	$(BIN)/ILS $(SEMILLA) < $(ENTRADA)/GKD-c_11_n500_m50.txt
+	$(BIN)/ILS $(SEMILLA) < $(ENTRADA)/MDG-b_1_n500_m50.txt
+	$(BIN)/ILS $(SEMILLA) < $(ENTRADA)/MDG-a_31_n2000_m200.txt
 
 clean:
 	rm -f $(BIN)/*
