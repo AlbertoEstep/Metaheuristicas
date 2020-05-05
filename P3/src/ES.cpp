@@ -135,7 +135,6 @@ void enfriamientoSimulado(int n_sel, vector<vector<double>> &m, const int MAX_EV
   clock_t t_total, t_inicio;
   solucion solucion_actual, solucion_guardada;
   double numero_aleatorio;
-  // https://es.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
   int n_enfriamientos = 100000 / max_vecinos;
   double beta;
 
