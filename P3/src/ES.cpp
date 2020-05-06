@@ -117,7 +117,6 @@ void mutarSolucion(solucion &sol, vector<vector<double>> &m) {
     double antigua_contribucion = distanciaAUnConjunto(n_aleatorio1, sol.v, m) - m[n_aleatorio1][n_aleatorio2];
     double nueva_contribucion = distanciaAUnConjunto(n_aleatorio2, sol.v, m);
     sol.diversidad = sol.diversidad + nueva_contribucion - antigua_contribucion;
-    // TODO:iterations++; AQUI (mirar la nota importante en el main)
   }
 }
 
@@ -145,8 +144,7 @@ void enfriamientoSimulado(int n_sel, vector<vector<double>> &m, const int MAX_EV
   mejor_diversidad = solucion_actual.diversidad;
   temperatura_inicial = solucion_actual.diversidad*0.3/-log(0.3);
   beta = (temperatura_inicial - temperatura_final)/(n_enfriamientos * temperatura_inicial * temperatura_final);
-
-
+  
   temperatura_actual = temperatura_inicial;
 
   while(exitos > 0 && evaluaciones < MAX_EVALUACIONES && temperatura_actual > temperatura_final){
@@ -165,7 +163,6 @@ void enfriamientoSimulado(int n_sel, vector<vector<double>> &m, const int MAX_EV
         solucion_actual = solucion_guardada;
     }
     temperatura_actual = temperatura_actual / (1 + beta*temperatura_actual);
-    ++n_enfriamientos;
   }
   t_total = clock() - t_inicio;
   cout << mejor_diversidad << "\t" << (double) t_total / CLOCKS_PER_SEC << "\t" << evaluaciones << endl;

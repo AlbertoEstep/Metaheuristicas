@@ -325,9 +325,11 @@ el número de elementos seleccionados distintos a modificar en la mutación.
 
 Parametros:
   - s = solucion a perturbar
+  - m = matriz de distancias
+  - n = número de elementos a escoger en una solución
 */
-void perturbacionBrusca(solucion &s, vector<vector<double>> &m){
-  int t = s.v.size() * 0.1;
+void perturbacionBrusca(solucion &s, vector<vector<double>> &m, int n){
+  int t = n * 0.1;
   for(int i = 0; i < t; ++i)
     mutarSolucion(s, m);
 }
@@ -364,7 +366,7 @@ void ILS(vector<vector<double>> &m, int n, const int MAX_EVALUACIONES){
   }
 
   for(int i = 1; i < iteraciones; ++i){
-    perturbacionBrusca(solucion_actual, m);
+    perturbacionBrusca(solucion_actual, m, n);
     evaluaciones_iteracion = busquedaLocal(m, solucion_actual, MAX_EVALUACIONES);
     evaluaciones += 1 + evaluaciones_iteracion;
     //cout << "Iteración " << i << ": evaluaciones: " << evaluaciones_iteracion << endl;

@@ -126,9 +126,11 @@ el número de elementos seleccionados distintos a modificar en la mutación.
 
 Parametros:
   - s = solucion a perturbar
+  - m = matriz de distancias
+  - n = número de elementos a escoger en una solución
 */
-void perturbacionBrusca(solucion &s, vector<vector<double>> &m){
-  int t = s.v.size() * 0.1;
+void perturbacionBrusca(solucion &s, vector<vector<double>> &m, int n){
+  int t = n * 0.1;
   for(int i = 0; i < t; ++i)
     mutarSolucion(s, m);
 }
@@ -206,7 +208,7 @@ void ILS_ES(vector<vector<double>> &m, int n_sel, const int MAX_EVALUACIONES){
   }
 
   for(int i = 1; i < iteraciones; ++i){
-    perturbacionBrusca(solucion_actual, m);
+    perturbacionBrusca(solucion_actual, m, n_sel);
     evaluaciones += 1 + enfriamientoSimulado(solucion_actual, MAX_EVALUACIONES, n_sel, m);
     if(solucion_guardada.diversidad > solucion_actual.diversidad)
       solucion_actual = solucion_guardada;
