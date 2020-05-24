@@ -144,7 +144,7 @@ void enfriamientoSimulado(int n_sel, vector<vector<double>> &m, const int MAX_EV
   mejor_diversidad = solucion_actual.diversidad;
   temperatura_inicial = solucion_actual.diversidad*0.3/-log(0.3);
   beta = (temperatura_inicial - temperatura_final)/(n_enfriamientos * temperatura_inicial * temperatura_final);
-  
+
   temperatura_actual = temperatura_inicial;
 
   while(exitos > 0 && evaluaciones < MAX_EVALUACIONES && temperatura_actual > temperatura_final){
@@ -185,5 +185,4 @@ int main(int argc, char *argv[]){
   leerDatos(m); // inicializo la matriz de entradas
 
   enfriamientoSimulado(n_sel, m, MAX_EVALUACIONES);
-  //TODO:Informacion importante mutaxcion
 }
