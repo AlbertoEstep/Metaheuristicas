@@ -152,7 +152,6 @@ void evaluarPoblacion(poblacion &p, int &evaluaciones, vector<vector<double>> &m
 
 Parametros:
   - m = matriz de distancias
-  - s = solucion a rellenar
   - n = numero de elementos a seleccionar para la solucion
 */
 solucion obtenerCuckooPorLevy(vector<vector<double>> &m, int n){
@@ -194,6 +193,34 @@ bool operator < (const solucion &s1, const solucion &s2){
     return s1.coste > s2.coste;
 }
 
+/* Metodo de mutacion entre la solucion
+
+Parametros:
+  - s = solucion a mutar
+  - evaluaciones = numero de evaluaciones de la funcion objetivo hechas actualmente
+  - m = matriz de distancias
+*/
+void alterarSolucion(solucion &s, int &evaluaciones, vector<vector<double>> &m){
+  int n_aleatorio1, n_aleatorio2;
+
+  do {
+    n_aleatorio1 = rand() % s.v.size();
+  } while(s.v[n_aleatorio1]);
+  do{
+    n_aleatorio2 = rand() % s.v.size();;
+  } while(!s.v[n_aleatorio2]);
+
+  s.v[n_aleatorio1] = true;
+  s.v[n_aleatorio2] = false;
+
+  if(s.evaluada){
+    double antiguo_coste = distanciaAUnConjunto(n_aleatorio2, s.v, m) - m[n_aleatorio2][n_aleatorio1];
+    double nuevo_coste = distanciaAUnConjunto(n_aleatorio1, s.v, m);
+    s.coste = s.coste + nuevo_coste - antiguo_coste;
+    ++evaluaciones;
+  }
+}
+
 
 /* Metodo de reemplazamiento de nidos de la poblacion
 
@@ -206,13 +233,10 @@ Parametros:
 void reemplazarPoblacion(poblacion &p, double p_a, vector<vector<double>> &m, int n, int &evaluaciones){
   int n_original = p.n_individuos;
   int n_reemplazar = n_original*p_a;
-  poblacion poblacion_aux;
+  poblacion poblacion_aux = p;
   poblacion_aux.v.resize(n_reemplazar);
-  poblacion_aux.n_individuos = n_reemplazar;
   for(int i = 0; i < n_reemplazar; ++i){
-    solucionAleatoria(m, poblacion_aux.v[i], n);
-    evaluarSolucion(poblacion_aux.v[i], m);
-    ++evaluaciones;
+    alterarSolucion(poblacion_aux.v[i], evaluaciones, m);
     p.v.push_back(poblacion_aux.v[i]);
   }
   sort(p.v.begin(), p.v.end());
@@ -261,7 +285,7 @@ double CS(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
 int main(int argc, char *argv[]){
   int n_total, n_sel; // n_total = número de elementos &&
                       // n_sel = el número de elementos a seleccionar del problema
-  const int MAX_EVALUACIONES = 5000;
+  const int MAX_EVALUACIONES = 100000;
 
   cin >> n_total >> n_sel; // inicializo los valores con la primera línea del fichero
   vector<double> v(n_total, 0);
