@@ -6,8 +6,8 @@ ENTRADA=./entrada
 OPT=-Wall -O2
 SEMILLA=1234567
 
-all: clean CS_hibrido_2Ejemplos CS_hibrido_1Ejemplos CSEjemplos CS_mejoradoEjemplos
-
+#all: clean CS_hibrido_2Ejemplos CS_hibrido_1Ejemplos CSEjemplos CS_mejoradoEjemplos
+all: clean CS_mejoradoResultados
 # Compilación
 $(BIN)/CS:
 	g++ $(OPT) $(SRC)/CS.cpp -o $(BIN)/CS
@@ -176,7 +176,7 @@ CS_mejoradoResultados: $(BIN)/CS_mejorado $(SRC)/CS_mejorado.cpp
 	$(BIN)/CS_mejorado $(SEMILLA) < $(ENTRADA)/MDG-a_39_n2000_m200.txt
 	$(BIN)/CS_mejorado $(SEMILLA) < $(ENTRADA)/MDG-a_40_n2000_m200.txt
 
-Resultados: clean CSResultados CS_hibrido_1Resultados CS_mejoradoResultados
+Resultados: clean CSResultados CS_hibrido_1Resultados CS_hibrido_2Resultados CS_mejoradoResultados
 
 
 clean:

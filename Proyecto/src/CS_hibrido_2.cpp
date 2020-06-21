@@ -460,12 +460,12 @@ double CS_hibrido(vector<vector<double>> &m, int n, int MAX_EVALUACIONES){
   evaluarPoblacion(poblacion, evaluaciones, m);
 
   while (evaluaciones < MAX_EVALUACIONES){
-    generaciones++;
     cuco = obtenerCuckooPorLevy(m, n);
     evaluarSolucion(cuco, m);
     ++evaluaciones;
     reemplazarNido(poblacion, cuco);
     reemplazarPoblacion(poblacion, p_a, m, n, evaluaciones);
+    ++generaciones;
     if((generaciones % 10) == 0)
       hibridar(poblacion, max_evaluaciones_bl, evaluaciones, m);
   }

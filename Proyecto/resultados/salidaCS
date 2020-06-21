@@ -1,0 +1,62 @@
+rm -f ./bin/*
+g++ -Wall -O2 ./src/CS.cpp -o ./bin/CS
+./bin/CS 1234567 < ./entrada/GKD-c_11_n500_m50.txt
+18256.9	0.73122		100007
+./bin/CS 1234567 < ./entrada/GKD-c_12_n500_m50.txt
+17783.2	1.07045		100007
+./bin/CS 1234567 < ./entrada/GKD-c_13_n500_m50.txt
+17944.1	1.11225		100007
+./bin/CS 1234567 < ./entrada/GKD-c_14_n500_m50.txt
+17817.3	1.1651		100007
+./bin/CS 1234567 < ./entrada/GKD-c_15_n500_m50.txt
+17839.5	1.13317		100007
+./bin/CS 1234567 < ./entrada/GKD-c_16_n500_m50.txt
+18144.4	1.07754		100007
+./bin/CS 1234567 < ./entrada/GKD-c_17_n500_m50.txt
+17954.5	1.0865		100007
+./bin/CS 1234567 < ./entrada/GKD-c_18_n500_m50.txt
+17862.2	1.12865		100007
+./bin/CS 1234567 < ./entrada/GKD-c_19_n500_m50.txt
+17992.8	1.16104		100007
+./bin/CS 1234567 < ./entrada/GKD-c_20_n500_m50.txt
+17887.6	1.2913		100007
+./bin/CS 1234567 < ./entrada/MDG-b_1_n500_m50.txt
+761623	1.15283		100007
+./bin/CS 1234567 < ./entrada/MDG-b_2_n500_m50.txt
+767143	1.08503		100007
+./bin/CS 1234567 < ./entrada/MDG-b_3_n500_m50.txt
+757504	1.04985		100007
+./bin/CS 1234567 < ./entrada/MDG-b_4_n500_m50.txt
+759598	1.03208		100007
+./bin/CS 1234567 < ./entrada/MDG-b_5_n500_m50.txt
+759084	1.03881		100007
+./bin/CS 1234567 < ./entrada/MDG-b_6_n500_m50.txt
+774554	1.06727		100007
+./bin/CS 1234567 < ./entrada/MDG-b_7_n500_m50.txt
+764348	1.0812		100007
+./bin/CS 1234567 < ./entrada/MDG-b_8_n500_m50.txt
+756083	1.06073		100007
+./bin/CS 1234567 < ./entrada/MDG-b_9_n500_m50.txt
+759730	1.05984		100007
+./bin/CS 1234567 < ./entrada/MDG-b_10_n500_m50.txt
+764294	1.04606		100007
+./bin/CS 1234567 < ./entrada/MDG-a_31_n2000_m200.txt
+112205	12.1935		100007
+./bin/CS 1234567 < ./entrada/MDG-a_32_n2000_m200.txt
+112350	11.6897		100007
+./bin/CS 1234567 < ./entrada/MDG-a_33_n2000_m200.txt
+111932	11.086		100007
+./bin/CS 1234567 < ./entrada/MDG-a_34_n2000_m200.txt
+111946	11.6908		100007
+./bin/CS 1234567 < ./entrada/MDG-a_35_n2000_m200.txt
+112405	11.0931		100007
+./bin/CS 1234567 < ./entrada/MDG-a_36_n2000_m200.txt
+112053	11.3482		100007
+./bin/CS 1234567 < ./entrada/MDG-a_37_n2000_m200.txt
+112016	11.7142		100007
+./bin/CS 1234567 < ./entrada/MDG-a_38_n2000_m200.txt
+112396	11.2128		100007
+./bin/CS 1234567 < ./entrada/MDG-a_39_n2000_m200.txt
+111267	11.103		100007
+./bin/CS 1234567 < ./entrada/MDG-a_40_n2000_m200.txt
+111645	11.0679		100007

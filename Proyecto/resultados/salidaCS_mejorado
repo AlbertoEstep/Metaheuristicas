@@ -1,0 +1,62 @@
+rm -f ./bin/*
+g++ -Wall -O2 ./src/CS_mejorado.cpp -o ./bin/CS_mejorado
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_11_n500_m50.txt
+18280	1.98094		100484
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_12_n500_m50.txt
+17777.5	1.95814		100278
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_13_n500_m50.txt
+17944.8	1.80788		100446
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_14_n500_m50.txt
+17908.8	1.98339		100599
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_15_n500_m50.txt
+17859.4	1.83683		100054
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_16_n500_m50.txt
+18172.4	1.83767		100112
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_17_n500_m50.txt
+17984.4	1.78728		100694
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_18_n500_m50.txt
+17865.5	1.88296		100060
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_19_n500_m50.txt
+17977.8	1.92882		100144
+./bin/CS_mejorado 1234567 < ./entrada/GKD-c_20_n500_m50.txt
+17885.6	1.69991		100377
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_1_n500_m50.txt
+772475	2.09939		100028
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_2_n500_m50.txt
+769918	2.02014		100470
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_3_n500_m50.txt
+773384	1.94241		100289
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_4_n500_m50.txt
+773111	1.94494		100299
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_5_n500_m50.txt
+767456	2.10756		100118
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_6_n500_m50.txt
+774099	2.08444		100333
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_7_n500_m50.txt
+772198	2.10983		100076
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_8_n500_m50.txt
+767187	1.94822		100209
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_9_n500_m50.txt
+766078	1.98063		100208
+./bin/CS_mejorado 1234567 < ./entrada/MDG-b_10_n500_m50.txt
+772544	1.93887		100075
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_31_n2000_m200.txt
+112786	74.424		100222
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_32_n2000_m200.txt
+112994	75.2537		100118
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_33_n2000_m200.txt
+112803	73.7526		100182
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_34_n2000_m200.txt
+113000	75.7477		100051
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_35_n2000_m200.txt
+112835	80.192		100045
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_36_n2000_m200.txt
+113086	76.1775		100056
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_37_n2000_m200.txt
+113135	75.5421		100262
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_38_n2000_m200.txt
+112932	74.9742		100198
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_39_n2000_m200.txt
+112926	77.6755		100117
+./bin/CS_mejorado 1234567 < ./entrada/MDG-a_40_n2000_m200.txt
+113061	75.8428		100309

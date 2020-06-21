@@ -1,0 +1,62 @@
+rm -f ./bin/*
+g++ -Wall -O2 ./src/CS_hibrido_1.cpp -o ./bin/CS_hibrido_1
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_11_n500_m50.txt
+18266.6	1.37726		100094
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_12_n500_m50.txt
+17760.9	1.75826		100340
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_13_n500_m50.txt
+17933.2	1.06473		100296
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_14_n500_m50.txt
+17898.4	1.90832		100281
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_15_n500_m50.txt
+17841.3	1.37606		100380
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_16_n500_m50.txt
+18131	1.58001		100373
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_17_n500_m50.txt
+17960.4	1.76716		100612
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_18_n500_m50.txt
+17854.8	1.31259		100086
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_19_n500_m50.txt
+17974.4	1.34879		100216
+./bin/CS_hibrido_1 1234567 < ./entrada/GKD-c_20_n500_m50.txt
+17873.8	1.7881		100219
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_1_n500_m50.txt
+764647	1.48243		100397
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_2_n500_m50.txt
+767790	1.58734		100376
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_3_n500_m50.txt
+768459	1.85362		100254
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_4_n500_m50.txt
+764735	0.977355		100146
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_5_n500_m50.txt
+761759	2.01417		100115
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_6_n500_m50.txt
+770131	1.83322		100194
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_7_n500_m50.txt
+769937	1.35396		100209
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_8_n500_m50.txt
+765102	1.50525		100188
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_9_n500_m50.txt
+768399	2.07193		100183
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-b_10_n500_m50.txt
+765972	2.08581		100149
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_31_n2000_m200.txt
+112636	85.5038		100288
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_32_n2000_m200.txt
+112405	78.1355		100101
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_33_n2000_m200.txt
+112443	89.4255		100154
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_34_n2000_m200.txt
+112640	88.5322		100193
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_35_n2000_m200.txt
+112515	82.6233		100032
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_36_n2000_m200.txt
+112626	81.5998		100062
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_37_n2000_m200.txt
+112613	88.8859		100157
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_38_n2000_m200.txt
+112522	89.2865		100241
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_39_n2000_m200.txt
+112371	86.4253		100100
+./bin/CS_hibrido_1 1234567 < ./entrada/MDG-a_40_n2000_m200.txt
+112740	86.3084		100004
